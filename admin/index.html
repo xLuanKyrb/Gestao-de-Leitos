@@ -2,64 +2,257 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<title>Administração - Leitos UPA</title>
+<title>Cadastro e Controle</title>
 <link rel="stylesheet" href="../style.css">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="../logo.png" type="image/svg+xml">
+<style>
+  .risk-label { font-size: 0.85em; font-weight: bold; margin-left: 5px; color: #555; }
+  .risk-low { color: green; }
+  .risk-med { color: orange; }
+  .risk-high { color: red; }
+  
+  .row-destaque { background-color: #fff3cd !important; border-left: 5px solid #ffc107; }
+  .row-livre { background-color: #f0f8ff !important; }
+  .row-crl-nao { background-color: #f8d7da !important; border-left: 5px solid #dc3545; } 
+  .row-alerta-conduta { background-color: #e9f5ff !important; border-left: 5px solid #007bff; }
+
+  .extra-checkbox-wrapper { display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
+  
+  fieldset { border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; background: #f9f9f9; }
+  legend { font-weight: bold; padding: 0 5px; color: #333; }
+
+  .table td { vertical-align: top; padding: 8px 5px; }
+  .table th { padding: 8px 5px; }
+
+  .meta-row {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      position: relative;
+  }
+  .meta-header { display: flex; justify-content: space-between; align-items: center; }
+  .meta-options { display: flex; gap: 15px; font-size: 0.9em; margin-top: 5px; align-items: center;}
+  .meta-motivo { display: none; margin-top: 5px; }
+  .meta-motivo input { width: 100%; border: 1px solid #d69e9e; background-color: #fff5f5; }
+  .btn-remove-meta { 
+      background: none; border: none; color: red; font-weight: bold; cursor: pointer; font-size: 1.2em;
+  }
+  
+  .lista-metas-view { list-style: none; padding: 0; margin: 0; font-size: 0.85em; }
+  .lista-metas-view li { margin-bottom: 4px; border-bottom: 1px dashed #eee; padding-bottom: 2px; }
+  .tag-status { padding: 2px 4px; border-radius: 3px; font-weight: bold; font-size: 0.8em; }
+  .st-na { background: #eee; color: #555; }
+  .st-realizada { background: #d4edda; color: #155724; }
+  .st-nao { background: #f8d7da; color: #721c24; }
+
+  /* === ESTILOS DE IMPRESSÃO (PDF) === */
+  @media print {
+      @page { size: landscape; margin: 10mm; }
+      body { background: #fff; font-family: Arial, sans-serif; -webkit-print-color-adjust: exact; }
+      .header, #formPaciente, .secondary, .edit, .rem, #container_botoes_acao, button { display: none !important; }
+      .card { border: none; box-shadow: none; padding: 0; margin: 0; }
+      h3 { margin-top: 0; text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+      .table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      .table th, .table td { border: 1px solid #999; padding: 5px; color: #000; }
+      .table th { background-color: #eee !important; font-weight: bold; }
+      .row-crl-nao { background-color: #fdecea !important; }
+      .row-destaque { background-color: #fff8e1 !important; }
+      .table th:last-child, .table td:last-child { display: none; }
+  }
+</style>
 </head>
 <body>
 <div class="container">
   <header class="header">
-    <h1>Administração - Acompanhamento de Leitos</h1>
-    <div><a href="../index.html"><button class="secondary">Visualização</button></a></div>
-    <a href="../relatorio"><button class="secondary">Relatórios</button></a>
-
+    <h1>Cadastro de Leitos</h1>
+    <div>
+        <a href="../index.html"><button class="secondary">Leitos</button></a>
+        <a href="../sala/index.html"><button class="secondary">Sala</button></a>
+        <a href="../relatorio/index.html"><button class="secondary">Relatório</button></a>
+        <button class="secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
+    </div>
+    
   </header>
 
-  <main class="card">
-    <form id="formPaciente">
+  <main class="card" id="formPaciente">
+    <form>
       <input type="hidden" id="id_editando">
+
       <div class="form-row">
         <input type="text" id="nome" placeholder="Nome completo" required>
-        <input type="number" id="leito" placeholder="Leito (1-5)" min="1" max="5" required>
+
+        <div style="display:flex; flex-direction:column; width: 120px;">
+          <input type="number" id="leito" placeholder="Nº Leito" min="0" max="999" required>
+          <div class="extra-checkbox-wrapper">
+            <input type="checkbox" id="leito_extra"> <label for="leito_extra">Leito extra</label>
+          </div>
+        </div>
+
         <select id="local" required>
           <option value="">Selecione o Local</option>
+          <option>Isolamento Adulto</option>
+          <option>Isolamento Pediátrico</option>
           <option>Observação Masculina</option>
           <option>Observação Feminina</option>
           <option>Observação Pediátrica</option>
-          <option>Isolamento Adulto</option>
-          <option>Isolamento Pediátrico</option>
+          <option>Sala de Decisão</option>
+          <option>Medicação</option>
+		  <option>Emergência</option>
         </select>
-        <input type="date" id="nascimento" required>
-        <input type="text" id="atendimento" placeholder="Número do atendimento" required>
-      </div>
 
-      <div class="form-row">
+        <input type="date" id="nascimento" required title="Data de Nascimento">
+        
+        <select id="tipo_paciente" disabled style="background-color: #e9ecef;">
+          <option value="">Aguardando Data...</option>
+          <option value="adulto">Adulto (>12 anos)</option>
+          <option value="pediatrico">Pediatria (<=12 anos)</option>
+        </select>
+
+        <input type="text" id="atendimento" placeholder="Nº Atendimento" required>
+      </div>
+    
+        <div class="form-row" style="margin-top: 10px;">
+        <div style="width: 100%;">
+            <label style="font-size:0.8em; font-weight:bold; color:#333;">Observações Clínicas / Gerais:</label>
+            <textarea id="obs_clinica" rows="2" placeholder="Digite aqui observações adicionais sobre o quadro do paciente..." style="width:100%; resize: vertical; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit;"></textarea>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top: 10px;">
         <select id="aguardando">
-          <option value="">Aguardando...</option>
+          <option value="">Status / Aguardando...</option>
           <option>Exame</option>
           <option>Alta</option>
           <option>Transferência</option>
           <option>Resultado</option>
           <option>Nada</option>
         </select>
+
         <input type="text" id="pendencias" placeholder="Pendências (Rx, ECG, etc)">
         <input type="text" id="medico" placeholder="Médico responsável">
-        <input type="text" id="conduta" placeholder="Conduta / Central de leitos">
+        
         <select id="dieta">
           <option value="">Dieta</option>
           <option>Livre</option>
           <option>Jejum</option>
           <option>Hipossódica</option>
           <option>Pastosa</option>
+          <option>Diabética</option>
         </select>
-        <input type="text" id="hospital" placeholder="Hospital de aceite">
-        <input type="text" id="observacao" placeholder="Observação geral">
-        <input type="text" id="aguardando_vaga" placeholder="Aguardando vaga / medicação / inalação">
       </div>
 
-      <div style="display:flex;gap:8px; margin-top:10px;">
-        <button type="submit" id="btnSalvar">Adicionar</button>
-        <button type="button" id="limpar" class="secondary">Limpar tudo</button>
+      <div style="margin: 10px 0; border: 1px dashed #ffc107; padding: 10px; background: #fffdf5;">
+        <label style="font-weight:bold; font-size:0.9em; color:#d39e00;">⚠️ Local de Destaque (Obs / Inalação / Aguardando Vaga)</label>
+        <input type="text" id="aguardando_vaga" placeholder="Descreva aqui para destacar na tabela (ex: Aguardando vaga masc, Inalação...)" style="width:99%; margin-top:5px;">
+        
+        <select id="conduta" style="width:100%; margin-top:5px;">
+          <option value="">Conduta / Central de Leitos (Selecione)</option>
+          <option value="Sim">Sim (Conduta Realizada)</option>
+          <option value="Não">Não (Aguardando Conduta)</option>
+        </select>
+
+        <input type="text" id="hospital" placeholder="Hospital de aceite (se houver)" style="width:99%; margin-top:5px;">
+      </div>
+
+      <hr>
+
+      <fieldset id="escala_adulto" style="display:none;">
+        <legend>Escalas Adulto (> 12 Anos)</legend>
+        <div class="form-row">
+          <div>
+            <select id="glasgow_tipo_adulto">
+                <option value="Glasgow">Glasgow</option>
+                <option value="RAS">RASS</option>
+            </select>
+            <input type="number" id="glasgow_valor_adulto" placeholder="Valor">
+          </div>
+          <div>
+            <input type="number" id="iris_adulto" placeholder="IRIS (Valor)" oninput="calcRisco('iris', this.value, 'lbl_iris_ad')">
+            <span id="lbl_iris_ad" class="risk-label"></span>
+          </div>
+          <div>
+            <input type="number" id="morse" placeholder="Morse (Valor)" oninput="calcRisco('morse', this.value, 'lbl_morse')">
+            <span id="lbl_morse" class="risk-label"></span>
+          </div>
+          <div>
+             <input type="number" id="braden_adulto" placeholder="Braden (Valor)" oninput="calcRisco('braden', this.value, 'lbl_braden_ad')">
+             <span id="lbl_braden_ad" class="risk-label"></span>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:10px;">
+          <div>
+            <select id="dor_tipo_adulto">
+                <option value="Dor">Dor (1-10)</option>
+                <option value="BPS">BPS</option>
+            </select>
+            <input type="number" id="dor_valor_adulto" placeholder="Valor">
+          </div>
+          <div>
+             <select id="news">
+               <option value="">NEWS (Selecione)</option>
+               <option value="Baixo">Baixo</option>
+               <option value="Moderado">Moderado</option>
+               <option value="Alto">Alto</option>
+             </select>
+          </div>
+          <div>
+            <input type="text" id="meows" placeholder="MEOWS (Opcional)">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset id="escala_ped" style="display:none;">
+        <legend>Escalas Pediátricas (<= 12 Anos)</legend>
+        <div class="form-row">
+          <div>
+            <select id="glasgow_tipo_ped">
+                <option value="Glasgow">Glasgow</option>
+                <option value="RAS">RAS</option>
+            </select>
+            <input type="number" id="glasgow_valor_ped" placeholder="Valor">
+          </div>
+          <div>
+            <input type="number" id="iris_ped" placeholder="IRIS (Valor)" oninput="calcRisco('iris', this.value, 'lbl_iris_ped')">
+            <span id="lbl_iris_ped" class="risk-label"></span>
+          </div>
+          <div>
+             <input type="number" id="humpty" placeholder="Humpty D. (Valor)" oninput="calcRisco('humpty', this.value, 'lbl_humpty')">
+             <span id="lbl_humpty" class="risk-label"></span>
+          </div>
+          <div>
+             <input type="number" id="braden_ped" placeholder="Braden (Valor)" oninput="calcRisco('braden', this.value, 'lbl_braden_ped')">
+             <span id="lbl_braden_ped" class="risk-label"></span>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:10px;">
+           <div>
+            <select id="dor_tipo_ped">
+                <option value="Dor">Dor (1-10)</option>
+                <option value="BPS">BPS</option>
+                <option value="FLACC">FLACC</option>
+            </select>
+            <input type="number" id="dor_valor_ped" placeholder="Valor">
+          </div>
+          <div>
+            <input type="number" id="pews" placeholder="PEWS (Valor)">
+          </div>
+        </div>
+      </fieldset>
+      
+      <fieldset>
+        <legend>Metas da Visita Multi</legend>
+        <div id="container_metas"></div>
+        <button type="button" class="secondary" onclick="adicionarMeta()" style="margin-top:10px; font-size:0.9em;">+ Adicionar Meta</button>
+      </fieldset>
+
+      <div id="container_botoes_acao" style="display:flex; gap:8px; margin-top:20px;">
+        <button type="submit" id="btnSalvar">Salvar Paciente</button>
+        <button type="button" id="limpar" class="secondary" onclick="limparForm()">Limpar / Novo</button>
       </div>
     </form>
   </main>
@@ -69,7 +262,13 @@
     <table class="table" id="tabela">
       <thead>
         <tr>
-          <th>Nome</th><th>Leito</th><th>Local</th><th>Aguardando</th><th>Entrada</th><th>Mais</th><th>Ações</th>
+          <th>Leito/Loc</th>
+          <th>Nome</th>
+          <th>Idade</th> 
+          <th>Riscos Principais</th>
+          <th>Metas visita | Obs. geral</th>
+          <th>Entrada</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -77,176 +276,495 @@
   </section>
 </div>
 
-<div id="loginPopup" style="display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;">
-  <div style="background:white;padding:20px;border-radius:8px;box-shadow:0 0 8px #0003;">
-    <h3>Login - Administração</h3>
-    <input type="text" id="user" placeholder="Usuário"><br><br>
-    <input type="password" id="pass" placeholder="Senha"><br><br>
-    <button id="loginBtn">Entrar</button>
-  </div>
-</div>
-
 <script>
+
 const API_BASE = '../api.php';
-const LIST_URL = '../api.php?action=list';
-const REMOVE_URL = '../api.php?action=delete';
-const UPDATE_URL = '../api.php?action=update';
+let listaPacientes = [];
 
-const usuarios = {
-  "admin": "admin",
-};
+// --- Lógica das Metas Multi ---
+function adicionarMeta(dados = {}) {
+    const container = document.getElementById('container_metas');
+    const idUnico = 'meta_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const texto = dados.texto || '';
+    const status = dados.status || 'NA'; 
+    const motivo = dados.motivo || '';
 
-function verificarLogin() {
-  if(localStorage.getItem('usuarioLogado')) return;
-  document.getElementById('loginPopup').style.display='flex';
+    const div = document.createElement('div');
+    div.className = 'meta-row';
+    div.innerHTML = `
+        <div class="meta-header">
+            <input type="text" class="meta-texto" placeholder="Descrição da Meta" value="${texto}" style="flex:1; margin-right:10px;" required>
+            <button type="button" class="btn-remove-meta" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+        <div class="meta-options">
+            <label><input type="radio" name="${idUnico}" value="NA" ${status === 'NA' ? 'checked' : ''} onchange="toggleMotivo(this)"> NA</label>
+            <label><input type="radio" name="${idUnico}" value="Realizada" ${status === 'Realizada' ? 'checked' : ''} onchange="toggleMotivo(this)"> Realizada</label>
+            <label><input type="radio" name="${idUnico}" value="NaoRealizada" ${status === 'NaoRealizada' ? 'checked' : ''} onchange="toggleMotivo(this)"> Não realizada</label>
+        </div>
+        <div class="meta-motivo" style="display: ${status === 'NaoRealizada' ? 'block' : 'none'};">
+            <input type="text" class="meta-motivo-input" placeholder="Motivo da não realização" value="${motivo}">
+        </div>
+    `;
+    container.appendChild(div);
 }
 
-document.getElementById('loginBtn').addEventListener('click',()=>{
-  const u=document.getElementById('user').value.trim();
-  const p=document.getElementById('pass').value.trim();
-  if(usuarios[u] && usuarios[u]===p){
-    localStorage.setItem('usuarioLogado',u);
-    document.getElementById('loginPopup').style.display='none';
-  } else {
-    alert('Usuário ou senha inválidos');
+function toggleMotivo(radio) {
+    const row = radio.closest('.meta-row');
+    const motivoDiv = row.querySelector('.meta-motivo');
+    const motivoInput = row.querySelector('.meta-motivo-input');
+    
+    if (radio.value === 'NaoRealizada') {
+        motivoDiv.style.display = 'block';
+        motivoInput.focus();
+    } else {
+        motivoDiv.style.display = 'none';
+        motivoInput.value = '';
+    }
+}
+
+function obterMetasJSON() {
+    const metas = [];
+    document.querySelectorAll('.meta-row').forEach(row => {
+        const texto = row.querySelector('.meta-texto').value;
+        const checked = row.querySelector('input[type="radio"]:checked');
+        const status = checked ? checked.value : 'NA';
+        const motivo = row.querySelector('.meta-motivo-input').value;
+        if(texto.trim() !== "") {
+            metas.push({ texto, status, motivo });
+        }
+    });
+    return JSON.stringify(metas);
+}
+
+// --- Funções Auxiliares / Gerais ---
+function limparForm() {
+    document.getElementById('id_editando').value = '';
+    document.getElementById('nome').value = '';
+    document.getElementById('leito').value = '';
+    document.getElementById('leito_extra').checked = false;
+    document.getElementById('local').value = '';
+    document.getElementById('nascimento').value = '';
+    document.getElementById('tipo_paciente').value = '';
+    document.getElementById('atendimento').value = '';
+
+    document.getElementById('obs_clinica').value = ''; 
+
+    document.getElementById('aguardando').value = '';
+    document.getElementById('pendencias').value = '';
+    document.getElementById('medico').value = '';
+    document.getElementById('dieta').value = '';
+    
+    document.getElementById('aguardando_vaga').value = '';
+    document.getElementById('conduta').value = '';
+    document.getElementById('hospital').value = '';
+
+    // Limpa escalas
+    document.querySelectorAll('#escala_adulto input, #escala_ped input').forEach(i => i.value = '');
+    document.querySelectorAll('.risk-label').forEach(s => s.textContent = '');
+
+    // Limpa Metas
+    document.getElementById('container_metas').innerHTML = '';
+    
+    // Reseta displays
+    document.getElementById('escala_adulto').style.display = 'none';
+    document.getElementById('escala_ped').style.display = 'none';
+}
+
+function calcRisco(escala, val, labelId) {
+    const lbl = document.getElementById(labelId);
+    if(!lbl || val === "" || isNaN(parseFloat(val))) { 
+        if(lbl) lbl.innerHTML = ""; 
+        return; 
+    }
+    val = parseFloat(val);
+    let texto = "";
+    let classe = "";
+
+    if (escala === 'iris') {
+        if(val < 5) { texto = "Reduzido"; classe = "risk-low"; }
+        else if(val <= 9) { texto = "Intermédio"; classe = "risk-med"; }
+        else { texto = "Elevado"; classe = "risk-high"; }
+    } else if (escala === 'morse') {
+        if(val <= 24) { texto = "Baixo"; classe = "risk-low"; }
+        else if(val <= 44) { texto = "Médio"; classe = "risk-med"; }
+        else { texto = "Alto"; classe = "risk-high"; }
+    } else if (escala === 'humpty') {
+        if(val <= 10) { texto = "Baixo"; classe = "risk-low"; }
+        else if(val <= 14) { texto = "Médio"; classe = "risk-med"; }
+        else { texto = "Alto"; classe = "risk-high"; }
+    } else if (escala === 'braden') {
+        if(val >= 19) { texto = "Baixo"; classe = "risk-low"; } 
+        else if(val >= 15) { texto = "Leve"; classe = "risk-med"; }
+        else if(val >= 13) { texto = "Moderado"; classe = "risk-med"; }
+        else if(val >= 10) { texto = "Alto"; classe = "risk-high"; }
+        else { texto = "Muito Alto"; classe = "risk-high"; }
+    }
+    lbl.innerHTML = texto;
+    lbl.className = "risk-label " + classe;
+}
+
+const nascimentoInput = document.getElementById('nascimento');
+const escalaAdulto = document.getElementById("escala_adulto");
+const escalaPed = document.getElementById("escala_ped");
+const tipoPaciente = document.getElementById('tipo_paciente');
+
+const calcularTipoPaciente = () => {
+  if(!nascimentoInput.value) {
+        tipoPaciente.value = "";
+        escalaAdulto.style.display = "none";
+        escalaPed.style.display = "none";
+        return;
+    }
+  const nasc = new Date(nascimentoInput.value);
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
+      idade--;
   }
-});
+  const tipo = idade <= 12 ? "pediatrico" : "adulto";
+  tipoPaciente.value = tipo;
+  escalaAdulto.style.display = tipo === "adulto" ? "block" : "none";
+  escalaPed.style.display = tipo === "pediatrico" ? "block" : "none";
+};
+nascimentoInput.onchange = calcularTipoPaciente;
 
-async function fetchList(){
-  const r = await fetch(LIST_URL);
-  return await r.json();
+function calcIdade(dataStr) {
+    if(!dataStr) return "--";
+    const nasc = new Date(dataStr);
+    const diff = Date.now() - nasc.getTime();
+    return Math.abs(new Date(diff).getUTCFullYear() - 1970);
 }
 
-function valorSeguro(v) {
-  return (v && v !== "undefined" && v !== "") ? v : "--";
+function formatDate(dt) {
+    if(!dt) return "--";
+    const dataHora = new Date(dt);
+    const dataFormatada = dataHora.toLocaleDateString('pt-BR');
+    const horaFormatada = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `${dataFormatada} ${horaFormatada}`; 
 }
 
-async function carregarTabela(){
-  const r = await fetchList();
-  const tbody = document.querySelector('#tabela tbody');
-  tbody.innerHTML='';
-  if(!r.success) return;
+async function carregarTabela() {
+    try {
+        const r = await fetch(API_BASE + '?action=list');
+        const json = await r.json();
+        const tbody = document.querySelector("#tabela tbody");
+        tbody.innerHTML = "";
+        if (!json.data) return;
 
-  r.data.forEach(p=>{
-    const tr=document.createElement('tr');
+        listaPacientes = json.data;
 
-    const more = `
-      <div class="small">
-        Nasc: ${valorSeguro(p.nascimento)}<br/>
-        Atendimento: ${valorSeguro(p.atendimento)}<br/>
-        Pend: ${valorSeguro(p.pendencias)}<br/>
-        Médico: ${valorSeguro(p.medico)}<br/>
-        Conduta: ${valorSeguro(p.conduta)}<br/>
-        Dieta: ${valorSeguro(p.dieta)}<br/>
-        Hospital: ${valorSeguro(p.hospital)}<br/>
-        Obs: ${valorSeguro(p.observacao)}<br/>
-        Aguardando vaga: ${valorSeguro(p.aguardando_vaga)}
-      </div>`;
+        json.data.forEach(p => {
+            const tr = document.createElement("tr");
+            const estaLivre = (p.status === 'livre');
+            let classeLinha = "";
+            let nomeExibicao = "";
+            let acoesHTML = "";
+            let infoRiscos = "";
+            let infoMetas = "";
+            let dataEntrada = "";
+            let idade = "";
+            
+            let permanencia = ""; 
 
-    tr.innerHTML = `
-      <td>${valorSeguro(p.nome)}</td>
-      <td>${valorSeguro(p.leito)}</td>
-      <td>${valorSeguro(p.local)}</td>
-      <td>${valorSeguro(p.aguardando)}</td>
-      <td>${valorSeguro(p.entrada)}</td>
-      <td>${more}</td>
-      <td>
-        <button data-id="${p.id}" class="edit">✏️</button>
-        <button data-id="${p.id}" class="rem">🗑️</button>
-      </td>`;
+            if (estaLivre) {
+                classeLinha = "row-livre";
+                nomeExibicao = "<span style='color:#999; font-style:italic;'>-- Disponível --</span>";
+                infoMetas = "<small style='color:#28a745'>Vago</small>";
+                acoesHTML = `<button class="secondary" onclick="preencherNovo('${p.leito}', '${p.local}')">➕ Ocupar</button>`;
+                idade = '--'; dataEntrada = '--';
+            } else {
+                const pendenciasTexto = (p.pendencias || '').toLowerCase();
+                const aguardandoVagaTexto = (p.aguardando_vaga || '').toLowerCase();
+                const condutaNao = (p.conduta || '').toLowerCase() === 'não';
+                const isCrlNao = (condutaNao && (aguardandoVagaTexto.includes('crl') || aguardandoVagaTexto.includes('vaga')));
+                
+                nomeExibicao = `<strong>${p.nome}</strong>`;
+                
+                // Parse Metas
+                try {
+                    const metasObj = JSON.parse(p.observacao || '[]');
+                    if (Array.isArray(metasObj) && metasObj.length > 0) {
+                        infoMetas = '<ul class="lista-metas-view">';
+                        metasObj.forEach(m => {
+                            let badge = '';
+                            if(m.status === 'Realizada') badge = '<span class="tag-status st-realizada">OK</span>';
+                            else if(m.status === 'NaoRealizada') badge = '<span class="tag-status st-nao">Ñ/R</span>';
+                            else badge = '<span class="tag-status st-na">NA</span>';
+                            let motivoTxt = (m.status === 'NaoRealizada' && m.motivo) ? `<br><em style="color:#a00; font-size:0.9em;">Obs: ${m.motivo}</em>` : '';
+                            infoMetas += `<li>${badge} ${m.texto} ${motivoTxt}</li>`;
+                        });
+                        infoMetas += '</ul>';
+                    } else if (p.observacao && p.observacao.trim() !== "" && !p.observacao.startsWith('[')) {
+                        infoMetas = p.observacao;
+                    } else {
+                        infoMetas = '<span style="color:#999">Sem metas</span>';
+                    }
+                } catch(e) { infoMetas = p.observacao || ''; }
+                
+                // Exibe também a OBS Clínica se houver
+                if(p.obs_clinica) {
+                    infoMetas += `<div style="margin-top:5px; border-top:1px dashed #ccc; padding-top:3px; font-size:0.85em; color:#444;"><strong>Obs. Geral:</strong> ${p.obs_clinica}</div>`;
+                }
 
-    tbody.appendChild(tr);
-  });
+                if (isCrlNao) {
+                    classeLinha = "row-crl-nao"; 
+                    nomeExibicao = `<span style="color:#dc3545; font-weight:bold;">⚠️ ${p.nome}</span>`;
+                    infoMetas = `<strong style="color:#dc3545;">AGUARDANDO VAGA/CRL</strong><br>` + infoMetas;
+                } else if (p.aguardando_vaga && p.aguardando_vaga.trim() !== "") {
+                    classeLinha = "row-destaque"; 
+                    infoMetas = `<strong style="color:#d39e00">⚠️ ${p.aguardando_vaga}</strong><br>` + infoMetas;
+                } else if (condutaNao) {
+                    classeLinha = "row-alerta-conduta"; 
+                    infoMetas = `<strong style="color:#007bff;">⚠️ CONDUTA PENDENTE</strong><br>` + infoMetas;
+                }
 
-  // Remover
-  document.querySelectorAll('.rem').forEach(btn=>{
-    btn.addEventListener('click', async e=>{
-      const id = e.target.dataset.id;
-      if(!confirm('Remover paciente?')) return;
-      const resp = await fetch(REMOVE_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({id: id})
-      });
-      const j = await resp.json();
-      if(j.success) carregarTabela(); else alert(j.message || 'Erro');
-    });
-  });
+                idade = calcIdade(p.nascimento) + " anos";
+                
+                // === CÁLCULO DE PERMANÊNCIA ===
+                if (p.entrada) {
+                    dataEntrada = formatDate(p.entrada);
+                    const entDate = new Date(p.entrada);
+                    const now = new Date();
+                    const diffMs = now - entDate;
+                    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffDias = Math.floor(diffHrs / 24);
+                    
+                    let tempoStr = "";
+                    if (diffDias > 0) tempoStr = `${diffDias}d ${diffHrs % 24}h`;
+                    else tempoStr = `${diffHrs}h`;
+                    
+                    permanencia = `<br><span style="font-size:0.75em; color:#0056b3; font-weight:bold;">Perm: ${tempoStr}</span>`;
+                } else {
+                    dataEntrada = "--";
+                }
+                
+                if(p.diagnostico) nomeExibicao += `<div style='font-size:0.85em; color:#666; margin-top:2px;'>${p.diagnostico}</div>`;
 
-  // Editar
-  document.querySelectorAll('.edit').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      const id = e.target.dataset.id;
-      const p = r.data.find(x=>x.id==id);
-      if(!p) return;
-      document.getElementById('id_editando').value=p.id;
-      for(const campo in p){
-        if(document.getElementById(campo))
-          document.getElementById(campo).value=p[campo];
-      }
-      document.getElementById('btnSalvar').textContent='Salvar Alterações';
-    });
-  });
+                let riscos = [];
+                if(p.tipo_paciente === 'adulto') {
+                    if (p.news) riscos.push(`NEWS: <strong>${p.news}</strong>`);
+                    if (p.braden_adulto) riscos.push(`Braden: <strong>${p.braden_adulto}</strong>`);
+                    if (p.morse) riscos.push(`Morse: <strong>${p.morse}</strong>`);
+                } else if (p.tipo_paciente === 'pediatrico') {
+                    if (p.pews) riscos.push(`PEWS: <strong>${p.pews}</strong>`);
+                    if (p.humpty) riscos.push(`Humpty: <strong>${p.humpty}</strong>`);
+                    if (p.braden_ped) riscos.push(`Braden: <strong>${p.braden_ped}</strong>`);
+                }
+                infoRiscos = riscos.length > 0 ? riscos.join(' | ') : '--';
+
+                acoesHTML = `
+                    <button class="edit" onclick="editar(${p.id})">✏️ Editar</button>
+                    <button class="rem" onclick="deletar(${p.id})">🚪 Alta</button>
+                `;
+            }
+
+            tr.className = classeLinha;
+            tr.innerHTML = `
+                <td>
+                    <strong style="font-size:1.1em">${p.leito}</strong>${p.leito.includes(" (Extra)") ? '<br><small style="color:red; font-weight:bold;">EXTRA</small>' : ''}<br>
+                    <span style="font-size:0.8em; color:#555;">${p.local}</span>
+                </td>
+                <td>${nomeExibicao}</td>
+                <td>${idade}</td>
+                <td><small>${infoRiscos}</small></td>
+                <td>${infoMetas}</td>
+                <td>${dataEntrada}${permanencia}</td>
+                <td>${acoesHTML}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) { console.error(error); }
 }
 
-// Adicionar / Atualizar
-document.getElementById('formPaciente').addEventListener('submit', async ev=>{
+function preencherNovo(leitoNum, localNome) {
+    limparForm(); 
+    if(leitoNum.includes("(Extra)")) {
+        document.getElementById('leito_extra').checked = true;
+        leitoNum = leitoNum.replace(" (Extra)", "").trim();
+    }
+    document.getElementById('leito').value = leitoNum;
+    document.getElementById('local').value = localNome;
+    adicionarMeta();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => document.getElementById('nome').focus(), 500);
+}
+
+// Função para dar Alta (Deletar Lógico)
+async function deletar(id) {
+    if (confirm('Confirmar ALTA e arquivamento deste paciente? (Os dados serão salvos no relatório).')) {
+        try {
+            const resp = await fetch(`${API_BASE}?action=delete`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: id })
+            });
+            
+            const json = await resp.json();
+            
+            if (json.success) {
+                carregarTabela();
+            } else {
+                alert("Erro ao realizar alta: " + (json.message || "Erro desconhecido"));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erro de conexão ao tentar realizar alta.");
+        }
+    }
+}
+
+const formPaciente = document.querySelector('form');
+
+formPaciente.onsubmit = async (ev) => {
   ev.preventDefault();
-  const idEdit = document.getElementById('id_editando').value;
-  const action = idEdit ? 'update' : 'add';
-  const payload = {
-    id: idEdit || undefined,
-    nome: document.getElementById('nome').value.trim(),
-    leito: parseInt(document.getElementById('leito').value || 0),
+  const idEd = document.getElementById('id_editando').value;
+  const action = idEd ? "update" : "add";
+  
+  let leitoFinal = document.getElementById('leito').value;
+  if(document.getElementById('leito_extra').checked) leitoFinal += " (Extra)";
+
+  const isAdulto = document.getElementById('escala_adulto').style.display === "block";
+  const isPed = document.getElementById('escala_ped').style.display === "block";
+
+  const data = {
+    id: idEd,
+    nome: document.getElementById('nome').value,
+    leito: leitoFinal, 
     local: document.getElementById('local').value,
     nascimento: document.getElementById('nascimento').value,
+    tipo_paciente: document.getElementById('tipo_paciente').value,
     atendimento: document.getElementById('atendimento').value,
+    
+    // Novo Campo enviado aqui:
+    obs_clinica: document.getElementById('obs_clinica').value,
+
     aguardando: document.getElementById('aguardando').value,
     pendencias: document.getElementById('pendencias').value,
     medico: document.getElementById('medico').value,
-    conduta: document.getElementById('conduta').value,
     dieta: document.getElementById('dieta').value,
+    glasgow_adulto: isAdulto && document.getElementById('glasgow_valor_adulto').value ? document.getElementById('glasgow_tipo_adulto').value + ": " + document.getElementById('glasgow_valor_adulto').value : '',
+    iris_adulto: isAdulto ? document.getElementById('iris_adulto').value : '',
+    morse: isAdulto ? document.getElementById('morse').value : '',
+    braden_adulto: isAdulto ? document.getElementById('braden_adulto').value : '',
+    dor_adulto: isAdulto && document.getElementById('dor_valor_adulto').value ? document.getElementById('dor_tipo_adulto').value + ": " + document.getElementById('dor_valor_adulto').value : '',
+    news: isAdulto ? document.getElementById('news').value : '',
+    meows: isAdulto ? document.getElementById('meows').value : '',
+    glasgow_ped: isPed && document.getElementById('glasgow_valor_ped').value ? document.getElementById('glasgow_tipo_ped').value + ": " + document.getElementById('glasgow_valor_ped').value : '',
+    iris_ped: isPed ? document.getElementById('iris_ped').value : '',
+    humpty: isPed ? document.getElementById('humpty').value : '',
+    braden_ped: isPed ? document.getElementById('braden_ped').value : '',
+    dor_ped: isPed && document.getElementById('dor_valor_ped').value ? document.getElementById('dor_tipo_ped').value + ": " + document.getElementById('dor_valor_ped').value : '',
+    pews: isPed ? document.getElementById('pews').value : '',
     hospital: document.getElementById('hospital').value,
-    observacao: document.getElementById('observacao').value,
-    aguardando_vaga: document.getElementById('aguardando_vaga').value
+    observacao: obterMetasJSON(), 
+    aguardando_vaga: document.getElementById('aguardando_vaga').value,
+    conduta: document.getElementById('conduta').value
   };
-  const resp = await fetch(`${API_BASE}?action=${action}`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  });
-  const j = await resp.json();
-  if(j.success){
-    document.getElementById('formPaciente').reset();
-    document.getElementById('id_editando').value='';
-    document.getElementById('btnSalvar').textContent='Adicionar';
-    carregarTabela();
-  } else alert(j.message || 'Erro ao salvar');
-});
 
-document.getElementById('limpar').addEventListener('click', async ()=>{
-  if(!confirm('Apagar todos os registros?')) return;
-  const list = await fetchList();
-  if(!list.success) return;
-  for(const p of list.data){
-    await fetch(REMOVE_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({id:p.id})
-    });
+  try {
+      const resp = await fetch(`${API_BASE}?action=${action}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+      });
+      const j = await resp.json();
+      if (!j.success) return alert("Erro ao salvar! " + (j.message || ""));
+      limparForm();
+      carregarTabela();
+  } catch (err) {
+      alert("Erro de comunicação com o servidor.");
   }
-  carregarTabela();
-});
+};
 
-verificarLogin();
+function editar(id) {
+    const p = listaPacientes.find(pac => pac.id == id);
+    if (!p) return alert("Erro ao encontrar dados do paciente.");
+
+    limparForm(); // Garante formulário limpo antes de preencher
+    document.getElementById('id_editando').value = p.id;
+    document.getElementById('nome').value = p.nome;
+    
+    let l = p.leito;
+    if(l && l.includes("(Extra)")) {
+        document.getElementById('leito_extra').checked = true;
+        l = l.replace(" (Extra)", "").trim();
+    }
+    document.getElementById('leito').value = l;
+    document.getElementById('local').value = p.local;
+    
+    if (p.nascimento) {
+      document.getElementById('nascimento').value = p.nascimento.split(" ")[0]; 
+      calcularTipoPaciente();
+    }
+    document.getElementById('atendimento').value = p.atendimento;
+
+    // Preenche o novo campo de Observação
+    document.getElementById('obs_clinica').value = p.obs_clinica || '';
+
+    document.getElementById('aguardando').value = p.aguardando;
+    document.getElementById('pendencias').value = p.pendencias;
+    document.getElementById('medico').value = p.medico;
+    document.getElementById('dieta').value = p.dieta;
+    
+    // Metas
+    if(p.observacao) {
+        try {
+            const metas = JSON.parse(p.observacao);
+            if(Array.isArray(metas)) {
+                document.getElementById('container_metas').innerHTML = '';
+                metas.forEach(m => adicionarMeta(m));
+            } else {
+                adicionarMeta({texto: p.observacao}); 
+            }
+        } catch(e) { adicionarMeta({texto: p.observacao}); }
+    } else {
+        adicionarMeta();
+    }
+
+    document.getElementById('hospital').value = p.hospital;
+    document.getElementById('aguardando_vaga').value = p.aguardando_vaga;
+    document.getElementById('conduta').value = p.conduta;
+    
+    // Escalas (Lógica de preenchimento)
+    const parseScale = (val) => val && val.includes(":") ? val.split(":").map(s => s.trim()) : ['', ''];
+    if(p.tipo_paciente === 'adulto') {
+        let [gType, gVal] = parseScale(p.glasgow_adulto);
+        document.getElementById('glasgow_tipo_adulto').value = gType || 'Glasgow';
+        document.getElementById('glasgow_valor_adulto').value = gVal || '';
+        document.getElementById('iris_adulto').value = p.iris_adulto || '';
+        document.getElementById('morse').value = p.morse || '';
+        document.getElementById('braden_adulto').value = p.braden_adulto || '';
+        let [dType, dVal] = parseScale(p.dor_adulto);
+        document.getElementById('dor_tipo_adulto').value = dType || 'Dor';
+        document.getElementById('dor_valor_adulto').value = dVal || '';
+        document.getElementById('news').value = p.news || '';
+        document.getElementById('meows').value = p.meows || '';
+        calcRisco('iris', p.iris_adulto, 'lbl_iris_ad');
+        calcRisco('morse', p.morse, 'lbl_morse');
+        calcRisco('braden', p.braden_adulto, 'lbl_braden_ad');
+    } else if(p.tipo_paciente === 'pediatrico') {
+        let [gType, gVal] = parseScale(p.glasgow_ped);
+        document.getElementById('glasgow_tipo_ped').value = gType || 'Glasgow';
+        document.getElementById('glasgow_valor_ped').value = gVal || '';
+        document.getElementById('iris_ped').value = p.iris_ped || '';
+        document.getElementById('humpty').value = p.humpty || '';
+        document.getElementById('braden_ped').value = p.braden_ped || '';
+        let [dType, dVal] = parseScale(p.dor_ped);
+        document.getElementById('dor_tipo_ped').value = dType || 'Dor';
+        document.getElementById('dor_valor_ped').value = dVal || '';
+        document.getElementById('pews').value = p.pews || '';
+        calcRisco('iris', p.iris_ped, 'lbl_iris_ped');
+        calcRisco('humpty', p.humpty, 'lbl_humpty');
+        calcRisco('braden', p.braden_ped, 'lbl_braden_ped');
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Inicializa
 carregarTabela();
-</script>
 
-
-
-
-verificarLogin();
-carregarTabela();
 </script>
 </body>
 </html>
