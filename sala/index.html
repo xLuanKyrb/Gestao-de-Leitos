@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Sala de Decisão e Medicação</title>
+<link rel="stylesheet" href="../style.css">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="../logo.png" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  /* === ESTILO IDÊNTICO AO SEU ADMIN === */
+  body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  
+  .header { 
+      background: #fff; padding: 15px 20px; 
+      border-bottom: 1px solid #ddd; 
+      display: flex; justify-content: space-between; align-items: center; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .header h1 { margin: 0; font-size: 1.4rem; color: #333; }
+
+  /* Grid de 2 Colunas */
+  .grid-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+      padding-bottom: 200px; /* Espaço para o gráfico */
+  }
+
+  .coluna-setor {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+  }
+
+  .titulo-setor {
+      padding: 10px 15px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #555;
+      display: flex;
+      justify-content: space-between;
+  }
+  .badge-count { background: #6c757d; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+
+  /* CARDS DOS PACIENTES */
+  .card-paciente {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      position: relative;
+  }
+  .card-paciente:last-child { border-bottom: none; }
+
+  /* Cores de Status (Iguais ao Admin) */
+  .row-livre { background-color: #f8f9fa; color: #999; }
+  .row-ocupado { background-color: #fff; border-left: 4px solid #28a745; }
+  .row-destaque { background-color: #fff3cd !important; border-left: 4px solid #ffc107; }
+  .row-crl-nao { background-color: #f8d7da !important; border-left: 4px solid #dc3545; }
+  .row-alerta-conduta { background-color: #e9f5ff !important; border-left: 4px solid #007bff; }
+
+  .nome-paciente { font-weight: bold; font-size: 1.05em; color: #333; }
+  .leito-badge { font-weight: bold; font-size: 1.1em; margin-right: 5px; color: #0056b3; }
+  
+  .info-meta { font-size: 0.85em; color: #666; margin-top: 4px; }
+  .riscos-tag { font-size: 0.8em; background: #eee; padding: 2px 5px; border-radius: 4px; color: #333; font-weight: bold; }
+  
+  /* Widget Flutuante */
+  .widget-grafico {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
+      border: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      z-index: 999;
+  }
+  .relogio-box {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #333;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 1.5rem;
+      opacity: 0.9;
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+    <h1>Monitoramento: Decisão e Medicação</h1>
+    <div>
+        <a href="../admin/"><button class="secondary">Administração</button></a>
+        <a href="../index.html"><button class="secondary">Visão Geral</button></a>
+    </div>
+</header>
+
+<div class="grid-layout">
+    <div class="coluna-setor">
+        <div class="titulo-setor" style="border-top: 3px solid #007bff;">
+            Sala de Decisão
+            <span class="badge-count" id="count-decisao">0</span>
+        </div>
+        <div id="lista-decisao">Carregando...</div>
+    </div>
+
+    <div class="coluna-setor">
+        <div class="titulo-setor" style="border-top: 3px solid #fd7e14;">
+            Medicação
+            <span class="badge-count" id="count-medicacao">0</span>
+        </div>
+        <div id="lista-medicacao">Carregando...</div>
+    </div>
+</div>
+
+<div class="widget-grafico">
+    <div style="width:120px; height:120px;">
+        <canvas id="graficoRosca"></canvas>
+    </div>
+    <div style="font-size:0.9em; line-height:1.4;">
+        <strong style="display:block; margin-bottom:5px;">Ocupação</strong>
+        <div style="color:#28a745">■ Livres: <b id="lbl-livres">0</b></div>
+        <div style="color:#dc3545">■ Ocupados: <b id="lbl-ocupados">0</b></div>
+    </div>
+</div>
+
+<div class="relogio-box" id="relogio">--:--</div>
+
+<script>
+const API_URL = '../api.php?action=list';
+const REFRESH_MS = 15000;
+let chartInstance = null;
+
+// Formata Observação/Metas (CORREÇÃO DO JSON)
+function formatarObservacao(obsJson) {
+    if (!obsJson) return '';
+    try {
+        // Tenta fazer o parse se for JSON
+        const metas = JSON.parse(obsJson);
+        if (Array.isArray(metas)) {
+            // Se for array (o novo formato de metas)
+            if (metas.length === 0) return '';
+            const itens = metas.map(m => {
+                const statusIcon = m.status === 'Realizada' ? '✅' : (m.status === 'NaoRealizada' ? '❌' : '🔹');
+                return `<div>${statusIcon} ${m.texto} ${m.motivo ? '<small>('+m.motivo+')</small>' : ''}</div>`;
+            }).join('');
+            return `<div style="margin-top:5px; padding-top:5px; border-top:1px dashed #eee;">${itens}</div>`;
+        } else {
+            // Se for JSON mas não array (caso raro)
+            return obsJson;
+        }
+    } catch (e) {
+        // Se der erro no parse, é texto normal (formato antigo ou texto livre)
+        return `<div style="margin-top:5px; color:#555; font-style:italic;">${obsJson}</div>`;
+    }
+}
+
+function renderCard(p) {
+    if (p.status === 'livre') {
+        return `
+        <div class="card-paciente row-livre">
+            <span class="leito-badge">${p.leito}</span> -- Disponível --
+        </div>`;
+    }
+
+    // Lógica de Cores igual ao Admin
+    const pendenciasTxt = (p.pendencias || '').toLowerCase();
+    const vagaTxt = (p.aguardando_vaga || '').toLowerCase();
+    const condutaNao = (p.conduta || '').toLowerCase() === 'não';
+    
+    let classeRow = 'row-ocupado'; // Padrão Verde
+    let alertaHtml = '';
+
+    if (condutaNao && (vagaTxt.includes('crl') || vagaTxt.includes('vaga'))) {
+        classeRow = 'row-crl-nao';
+        alertaHtml = '<div style="color:#dc3545; font-weight:bold; font-size:0.85em;">⚠️ AGUARDANDO VAGA/CRL</div>';
+    } else if (p.aguardando_vaga) {
+        classeRow = 'row-destaque';
+        alertaHtml = `<div style="color:#856404; font-weight:bold; font-size:0.85em;">⚠️ ${p.aguardando_vaga}</div>`;
+    } else if (condutaNao) {
+        classeRow = 'row-alerta-conduta';
+        alertaHtml = '<div style="color:#0056b3; font-weight:bold; font-size:0.85em;">⚠️ CONDUTA PENDENTE</div>';
+    }
+
+    // Escalas
+    let riscos = [];
+    if(p.news) riscos.push(`NEWS: ${p.news}`);
+    if(p.pews) riscos.push(`PEWS: ${p.pews}`);
+    if(p.braden_adulto || p.braden_ped) riscos.push(`Braden: ${p.braden_adulto || p.braden_ped}`);
+    
+    const riscosHtml = riscos.length ? `<span class="riscos-tag">${riscos.join(' | ')}</span>` : '';
+    const obsHtml = formatarObservacao(p.observacao);
+    const obsClinica = p.obs_clinica ? `<div style="font-size:0.85em; color:#444; margin-top:3px;"><strong>Obs:</strong> ${p.obs_clinica}</div>` : '';
+
+    return `
+    <div class="card-paciente ${classeRow}">
+        <div style="display:flex; justify-content:space-between;">
+            <div>
+                <span class="leito-badge">${p.leito}</span>
+                <span class="nome-paciente">${p.nome}</span>
+            </div>
+            ${riscosHtml}
+        </div>
+        ${alertaHtml}
+        
+        <div class="info-meta">
+            ${p.diagnostico ? `<strong>${p.diagnostico}</strong> • ` : ''}
+            Entrada: ${p.entrada ? p.entrada.substring(11,16) : '--:--'}
+        </div>
+        
+        ${obsClinica}
+        ${obsHtml}
+    </div>`;
+}
+
+async function carregar() {
+    try {
+        const req = await fetch(API_URL);
+        const json = await req.json();
+        if (!json.success) return;
+
+        const dados = json.data;
+        const setores = ["Sala de Decisão", "Medicação"];
+        
+        // Filtra e Ordena
+        const listaDec = dados.filter(d => d.local === setores[0]).sort((a,b) => parseInt(a.leito) - parseInt(b.leito));
+        const listaMed = dados.filter(d => d.local === setores[1]).sort((a,b) => parseInt(a.leito) - parseInt(b.leito));
+
+        document.getElementById('lista-decisao').innerHTML = listaDec.map(renderCard).join('');
+        document.getElementById('lista-medicacao').innerHTML = listaMed.map(renderCard).join('');
+        
+        document.getElementById('count-decisao').innerText = listaDec.filter(x=>x.status!=='livre').length;
+        document.getElementById('count-medicacao').innerText = listaMed.filter(x=>x.status!=='livre').length;
+
+        // Atualiza Gráfico
+        const livres = listaDec.filter(x=>x.status==='livre').length + listaMed.filter(x=>x.status==='livre').length;
+        const ocupados = listaDec.filter(x=>x.status!=='livre').length + listaMed.filter(x=>x.status!=='livre').length;
+        atualizarGrafico(livres, ocupados);
+
+    } catch (e) { console.error(e); }
+}
+
+function atualizarGrafico(livres, ocupados) {
+    document.getElementById('lbl-livres').innerText = livres;
+    document.getElementById('lbl-ocupados').innerText = ocupados;
+    
+    const ctx = document.getElementById('graficoRosca').getContext('2d');
+    if (chartInstance) {
+        chartInstance.data.datasets[0].data = [livres, ocupados];
+        chartInstance.update();
+    } else {
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Livres', 'Ocupados'],
+                datasets: [{
+                    data: [livres, ocupados],
+                    backgroundColor: ['#28a745', '#dc3545'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+    }
+}
+
+setInterval(() => {
+    const now = new Date();
+    document.getElementById('relogio').innerText = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}, 1000);
+
+carregar();
+setInterval(carregar, REFRESH_MS);
+</script>
+</body>
+</html>

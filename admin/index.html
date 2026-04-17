@@ -2,250 +2,938 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<title>Administração - Leitos UPA</title>
+<title>Cadastro e Controle - UPA</title>
 <link rel="stylesheet" href="../style.css">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="../logo.png" type="image/svg+xml">
+<style>
+  /* ==========================================================
+     BASE & TIPOGRAFIA
+     ========================================================== */
+  :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-body: #f1f5f9;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --alert-bg: #fffbeb;
+      --alert-border: #f59e0b;
+      --danger: #ef4444;
+      --success: #22c55e;
+  }
+
+  body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 0;
+      padding: 20px 0;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+
+  /* ==========================================================
+     LAYOUT DO FORMULÁRIO
+     ========================================================== */
+  .card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      margin-bottom: 25px;
+      border: 1px solid #e2e8f0;
+  }
+
+  .section-title {
+      font-size: 1.1em;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 0;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+  }
+
+  .form-section {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+  }
+
+  .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+  }
+
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+  .span-full { grid-column: 1 / -1; }
+
+  /* ==========================================================
+     INPUTS E LABELS (Corrigido o Grid Blowout)
+     ========================================================== */
+  .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0; /* Previne overflow em Flex/Grid */
+  }
+
+  .input-group label {
+      font-size: 0.85em;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+  }
+
+  /* Aplica Box-Sizing e Width 100% para evitar que inputs quebrem a tela */
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-width: 0; /* Crucial para o Flexbox não esticar além do limite */
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95em;
+      color: var(--text-main);
+      background-color: #fff;
+      transition: all 0.2s;
+      font-family: inherit;
+  }
+
+  input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+
+  input:disabled, select:disabled {
+      background-color: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+  }
+
+  /* Checkbox Customizado */
+  .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      background: #fff;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+  }
+  .checkbox-wrapper input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+  .checkbox-wrapper label { cursor: pointer; font-size: 0.9em; font-weight: 600; color: var(--text-main); text-transform: none; letter-spacing: 0;}
+
+  /* Flex Side-by-Side Específico para Escalas (Glasgow / Dor) */
+  .flex-split {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+  }
+  .flex-split select { flex: 0 0 110px; } /* O select terá exatos 110px */
+  .flex-split input { flex: 1; }          /* O input ocupa o restante do espaço */
+
+  /* ==========================================================
+     ALERTAS E DESTAQUES
+     ========================================================== */
+  .alert-section {
+      background-color: var(--alert-bg);
+      border-left: 4px solid var(--alert-border);
+  }
+  .alert-section .section-title { color: #b45309; border-bottom-color: #fde68a; }
+
+  /* ==========================================================
+     BOTÕES
+     ========================================================== */
+  .btn-container { display: flex; gap: 12px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+  
+  button {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.95em;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+  }
+  
+  .btn-primary { background-color: var(--primary); color: white; }
+  .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+  
+  .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+  .btn-secondary:hover { background-color: #e2e8f0; }
+
+  /* ==========================================================
+     METAS MULTI
+     ========================================================== */
+  .meta-row {
+      background: #fff; border: 1px solid var(--border); padding: 12px; margin-bottom: 10px;
+      border-radius: 6px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .meta-header { display: flex; gap: 10px; }
+  .btn-remove-meta { background: #fee2e2; color: var(--danger); padding: 8px 12px; border-radius: 6px; font-weight: bold; }
+  .btn-remove-meta:hover { background: #fca5a5; }
+  
+  .meta-options { display: flex; gap: 20px; font-size: 0.9em; font-weight: 600; color: #475569;}
+  .meta-options label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  
+  .meta-motivo input { border-color: #fca5a5; background: #fef2f2; }
+
+  /* ==========================================================
+     TABELA DE PACIENTES
+     ========================================================== */
+  .table-wrapper { overflow-x: auto; }
+  .table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em; }
+  .table th { background-color: #f8fafc; padding: 12px 15px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+  .table td { padding: 12px 15px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  .table tr:hover { background-color: #f8fafc; }
+
+  .risk-label { font-size: 0.8em; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;}
+  .risk-low { background: #dcfce7; color: #166534; }
+  .risk-med { background: #fef08a; color: #854d0e; }
+  .risk-high { background: #fee2e2; color: #991b1b; }
+
+  /* Cores Linha Tabela */
+  .row-destaque td { background-color: #fffbeb; }
+  .row-livre td { background-color: #f1f5f9; color: #94a3b8; }
+  .row-crl-nao td { background-color: #fef2f2; } 
+  .row-alerta-conduta td { background-color: #eff6ff; }
+
+  /* ==========================================================
+     IMPRESSÃO
+     ========================================================== */
+  @media print {
+      @page { size: landscape; margin: 10mm; }
+      body { background: #fff; }
+      header, #formPaciente, .btn-container, .edit, .rem { display: none !important; }
+      .card { border: none; box-shadow: none; padding: 0; }
+      .table th { background-color: #eee !important; color: #000; }
+      .table td, .table th { border: 1px solid #ccc; }
+  }
+</style>
 </head>
 <body>
 <div class="container">
-  <header class="header">
-    <h1>Administração - Acompanhamento de Leitos</h1>
-    <div><a href="../index.html"><button class="secondary">Visualização</button></a></div>
-    <a href="../relatorio"><button class="secondary">Relatórios</button></a>
-
+  <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1 style="color: var(--text-main); margin: 0;">Administração de Leitos</h1>
+    <div style="display: flex; gap: 10px;">
+        <a href="../index.html"><button class="btn-secondary">📺 Visão TV</button></a>
+        <a href="../sala/index.html"><button class="btn-secondary">🛏️ Visão Salas</button></a>
+        <a href="../relatorio/index.html"><button class="btn-secondary">📊 Relatório</button></a>
+        <button class="btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
   </header>
 
-  <main class="card">
-    <form id="formPaciente">
+  <main class="card" id="formPaciente">
+    <form>
       <input type="hidden" id="id_editando">
-      <div class="form-row">
-        <input type="text" id="nome" placeholder="Nome completo" required>
-        <input type="number" id="leito" placeholder="Leito (1-5)" min="1" max="5" required>
-        <select id="local" required>
-          <option value="">Selecione o Local</option>
-          <option>Observação Masculina</option>
-          <option>Observação Feminina</option>
-          <option>Observação Pediátrica</option>
-          <option>Isolamento Adulto</option>
-          <option>Isolamento Pediátrico</option>
-        </select>
-        <input type="date" id="nascimento" required>
-        <input type="text" id="atendimento" placeholder="Número do atendimento" required>
+
+      <div class="form-section">
+        <h4 class="section-title">👤 Dados de Identificação e Alocação</h4>
+        <div class="form-grid">
+            <div class="input-group span-2">
+                <label for="nome">Nome Completo do Paciente</label>
+                <input type="text" id="nome" placeholder="Ex: João da Silva" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="nascimento">Data de Nascimento</label>
+                <input type="date" id="nascimento" required>
+            </div>
+
+            <div class="input-group">
+                <label for="tipo_paciente">Classificação</label>
+                <select id="tipo_paciente" disabled>
+                    <option value="">Aguardando Data...</option>
+                    <option value="adulto">Adulto (>12 anos)</option>
+                    <option value="pediatrico">Pediatria (<=12 anos)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="atendimento">Nº Atendimento</label>
+                <input type="text" id="atendimento" placeholder="Registro do sistema" required>
+            </div>
+
+            <div class="input-group">
+                <label for="local">Setor / Local</label>
+                <select id="local" required>
+                    <option value="">Selecione o Setor</option>
+                    <option>Isolamento Adulto</option>
+                    <option>Isolamento Pediátrico</option>
+                    <option>Observação Masculina</option>
+                    <option>Observação Feminina</option>
+                    <option>Observação Pediátrica</option>
+                    <option>Sala de Decisão</option>
+                    <option>Medicação</option>
+                    <option>Emergência</option>
+                </select>
+            </div>
+
+            <div class="input-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="leito">Nº Leito</label>
+                    <input type="number" id="leito" placeholder="00" min="0" max="999" required>
+                </div>
+                <label class="checkbox-wrapper" style="margin-top: 23px;">
+                    <input type="checkbox" id="leito_extra"> 
+                    Leito Extra
+                </label>
+            </div>
+        </div>
       </div>
 
-      <div class="form-row">
-        <select id="aguardando">
-          <option value="">Aguardando...</option>
-          <option>Exame</option>
-          <option>Alta</option>
-          <option>Transferência</option>
-          <option>Resultado</option>
-          <option>Nada</option>
-        </select>
-        <input type="text" id="pendencias" placeholder="Pendências (Rx, ECG, etc)">
-        <input type="text" id="medico" placeholder="Médico responsável">
-        <input type="text" id="conduta" placeholder="Conduta / Central de leitos">
-        <select id="dieta">
-          <option value="">Dieta</option>
-          <option>Livre</option>
-          <option>Jejum</option>
-          <option>Hipossódica</option>
-          <option>Pastosa</option>
-        </select>
-        <input type="text" id="hospital" placeholder="Hospital de aceite">
-        <input type="text" id="observacao" placeholder="Observação geral">
-        <input type="text" id="aguardando_vaga" placeholder="Aguardando vaga / medicação / inalação">
+      <div class="form-section">
+        <h4 class="section-title">🩺 Quadro Clínico e Acompanhamento</h4>
+        <div class="form-grid">
+            <div class="input-group">
+                <label for="medico">Médico Responsável</label>
+                <input type="text" id="medico" placeholder="Dr(a). Nome">
+            </div>
+
+            <div class="input-group">
+                <label for="dieta">Dieta</label>
+                <select id="dieta">
+                    <option value="">Selecione...</option>
+                    <option>Livre</option>
+                    <option>Jejum</option>
+                    <option>Hipossódica</option>
+                    <option>Pastosa</option>
+                    <option>Diabética</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="aguardando">Status Geral</label>
+                <select id="aguardando">
+                    <option value="">Aguardando...</option>
+                    <option>Exame</option>
+                    <option>Alta</option>
+                    <option>Transferência</option>
+                    <option>Resultado</option>
+                    <option>Nada</option>
+                </select>
+            </div>
+
+            <div class="input-group span-2">
+                <label for="pendencias">Pendências (Rx, ECG, Laboratório, etc.)</label>
+                <input type="text" id="pendencias" placeholder="Descreva as pendências">
+            </div>
+
+            <div class="input-group span-full">
+                <label for="obs_clinica">Observações Clínicas Gerais</label>
+                <textarea id="obs_clinica" rows="2" placeholder="Digite observações sobre o quadro evolutivo do paciente..."></textarea>
+            </div>
+        </div>
       </div>
 
-      <div style="display:flex;gap:8px; margin-top:10px;">
-        <button type="submit" id="btnSalvar">Adicionar</button>
-        <button type="button" id="limpar" class="secondary">Limpar tudo</button>
+      <div class="form-section alert-section">
+        <h4 class="section-title">⚠️ Regulação, Vagas e Conduta</h4>
+        <div class="form-grid">
+            <div class="input-group">
+                <label for="conduta">Conduta / Central de Leitos</label>
+                <select id="conduta">
+                    <option value="">Selecione o status da conduta</option>
+                    <option value="Sim">Sim (Conduta Realizada)</option>
+                    <option value="Não">Não (Aguardando Conduta)</option>
+                </select>
+            </div>
+
+            <div class="input-group span-2">
+                <label for="aguardando_vaga">Motivo de Destaque / Vaga</label>
+                <input type="text" id="aguardando_vaga" placeholder="Ex: Aguardando vaga de UTI, Em inalação...">
+            </div>
+
+            <div class="input-group span-full">
+                <label for="hospital">Hospital de Aceite (Se houver)</label>
+                <input type="text" id="hospital" placeholder="Nome do hospital de destino da transferência">
+            </div>
+        </div>
+      </div>
+
+      <div id="escala_adulto" class="form-section" style="display:none;">
+        <h4 class="section-title">📊 Escalas de Risco: Adulto</h4>
+        <div class="form-grid">
+            <div class="input-group">
+                <label>Nível de Consciência</label>
+                <div class="flex-split">
+                    <select id="glasgow_tipo_adulto"><option>Glasgow</option><option value="RAS">RASS</option></select>
+                    <input type="number" id="glasgow_valor_adulto" placeholder="Valor">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Escala IRIS</label>
+                <input type="number" id="iris_adulto" placeholder="Valor" oninput="calcRisco('iris', this.value, 'lbl_iris_ad')">
+                <span id="lbl_iris_ad" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Queda (Morse)</label>
+                <input type="number" id="morse" placeholder="Valor" oninput="calcRisco('morse', this.value, 'lbl_morse')">
+                <span id="lbl_morse" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Lesão (Braden)</label>
+                <input type="number" id="braden_adulto" placeholder="Valor" oninput="calcRisco('braden', this.value, 'lbl_braden_ad')">
+                <span id="lbl_braden_ad" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Avaliação de Dor</label>
+                <div class="flex-split">
+                    <select id="dor_tipo_adulto"><option>Dor (1-10)</option><option>BPS</option></select>
+                    <input type="number" id="dor_valor_adulto" placeholder="Valor">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Deterioração (NEWS)</label>
+                <select id="news">
+                    <option value="">Selecione...</option>
+                    <option value="Baixo">Baixo</option>
+                    <option value="Moderado">Moderado</option>
+                    <option value="Alto">Alto</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Gestante (MEOWS)</label>
+                <input type="text" id="meows" placeholder="Valor (Opcional)">
+            </div>
+        </div>
+      </div>
+
+      <div id="escala_ped" class="form-section" style="display:none;">
+        <h4 class="section-title">🧸 Escalas de Risco: Pediátrica</h4>
+        <div class="form-grid">
+             <div class="input-group">
+                <label>Nível de Consciência</label>
+                <div class="flex-split">
+                    <select id="glasgow_tipo_ped"><option>Glasgow</option><option>RAS</option></select>
+                    <input type="number" id="glasgow_valor_ped" placeholder="Valor">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Escala IRIS</label>
+                <input type="number" id="iris_ped" placeholder="Valor" oninput="calcRisco('iris', this.value, 'lbl_iris_ped')">
+                <span id="lbl_iris_ped" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Queda (Humpty D.)</label>
+                <input type="number" id="humpty" placeholder="Valor" oninput="calcRisco('humpty', this.value, 'lbl_humpty')">
+                <span id="lbl_humpty" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Lesão (Braden Q)</label>
+                <input type="number" id="braden_ped" placeholder="Valor" oninput="calcRisco('braden', this.value, 'lbl_braden_ped')">
+                <span id="lbl_braden_ped" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Avaliação de Dor</label>
+                <div class="flex-split">
+                    <select id="dor_tipo_ped"><option>Dor (1-10)</option><option>BPS</option><option>FLACC</option></select>
+                    <input type="number" id="dor_valor_ped" placeholder="Valor">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Deterioração (PEWS)</label>
+                <input type="number" id="pews" placeholder="Valor">
+            </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h4 class="section-title">📋 Metas da Visita Multidisciplinar</h4>
+        <div id="container_metas"></div>
+        <button type="button" class="btn-secondary" onclick="adicionarMeta()" style="margin-top:10px;">+ Nova Meta</button>
+      </div>
+
+      <div class="btn-container">
+        <button type="submit" id="btnSalvar" class="btn-primary">💾 Salvar Dados do Paciente</button>
+        <button type="button" id="limpar" class="btn-secondary" onclick="limparForm()">🔄 Limpar / Novo Form</button>
       </div>
     </form>
   </main>
 
   <section class="card">
-    <h3>Pacientes Cadastrados</h3>
-    <table class="table" id="tabela">
-      <thead>
-        <tr>
-          <th>Nome</th><th>Leito</th><th>Local</th><th>Aguardando</th><th>Entrada</th><th>Mais</th><th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <h3 class="section-title" style="margin-bottom: 20px;">Listagem Geral de Leitos</h3>
+    <div class="table-wrapper">
+        <table class="table" id="tabela">
+        <thead>
+            <tr>
+            <th>Local / Leito</th>
+            <th>Paciente</th>
+            <th>Idade</th> 
+            <th>Riscos</th>
+            <th>Metas e Observações</th>
+            <th>Tempo Perm.</th>
+            <th>Ações Rápidas</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        </table>
+    </div>
   </section>
-</div>
-
-<div id="loginPopup" style="display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;">
-  <div style="background:white;padding:20px;border-radius:8px;box-shadow:0 0 8px #0003;">
-    <h3>Login - Administração</h3>
-    <input type="text" id="user" placeholder="Usuário"><br><br>
-    <input type="password" id="pass" placeholder="Senha"><br><br>
-    <button id="loginBtn">Entrar</button>
-  </div>
 </div>
 
 <script>
 const API_BASE = '../api.php';
-const LIST_URL = '../api.php?action=list';
-const REMOVE_URL = '../api.php?action=delete';
-const UPDATE_URL = '../api.php?action=update';
+let listaPacientes = [];
 
-const usuarios = {
-  "admin": "admin",
+function adicionarMeta(dados = {}) {
+    const container = document.getElementById('container_metas');
+    const idUnico = 'meta_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const texto = dados.texto || '';
+    const status = dados.status || 'NA'; 
+    const motivo = dados.motivo || '';
+
+    const div = document.createElement('div');
+    div.className = 'meta-row';
+    div.innerHTML = `
+        <div class="meta-header">
+            <input type="text" class="meta-texto" placeholder="Descreva a meta clínica..." value="${texto}" required>
+            <button type="button" class="btn-remove-meta" onclick="this.parentElement.parentElement.remove()" title="Remover Meta">✕</button>
+        </div>
+        <div class="meta-options">
+            <label><input type="radio" name="${idUnico}" value="NA" ${status === 'NA' ? 'checked' : ''} onchange="toggleMotivo(this)"> Não se Aplica (NA)</label>
+            <label><input type="radio" name="${idUnico}" value="Realizada" ${status === 'Realizada' ? 'checked' : ''} onchange="toggleMotivo(this)"> ✅ Realizada</label>
+            <label><input type="radio" name="${idUnico}" value="NaoRealizada" ${status === 'NaoRealizada' ? 'checked' : ''} onchange="toggleMotivo(this)"> ❌ Não Realizada</label>
+        </div>
+        <div class="meta-motivo" style="display: ${status === 'NaoRealizada' ? 'block' : 'none'}; margin-top: 8px;">
+            <input type="text" class="meta-motivo-input" placeholder="Justificativa da não realização..." value="${motivo}">
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function toggleMotivo(radio) {
+    const row = radio.closest('.meta-row');
+    const motivoDiv = row.querySelector('.meta-motivo');
+    const motivoInput = row.querySelector('.meta-motivo-input');
+    
+    if (radio.value === 'NaoRealizada') {
+        motivoDiv.style.display = 'block';
+        motivoInput.focus();
+    } else {
+        motivoDiv.style.display = 'none';
+        motivoInput.value = '';
+    }
+}
+
+function obterMetasJSON() {
+    const metas = [];
+    document.querySelectorAll('.meta-row').forEach(row => {
+        const texto = row.querySelector('.meta-texto').value;
+        const checked = row.querySelector('input[type="radio"]:checked');
+        const status = checked ? checked.value : 'NA';
+        const motivo = row.querySelector('.meta-motivo-input').value;
+        if(texto.trim() !== "") {
+            metas.push({ texto, status, motivo });
+        }
+    });
+    return JSON.stringify(metas);
+}
+
+function limparForm() {
+    document.getElementById('id_editando').value = '';
+    document.getElementById('nome').value = '';
+    document.getElementById('leito').value = '';
+    document.getElementById('leito_extra').checked = false;
+    document.getElementById('local').value = '';
+    document.getElementById('nascimento').value = '';
+    document.getElementById('tipo_paciente').value = '';
+    document.getElementById('atendimento').value = '';
+
+    document.getElementById('obs_clinica').value = ''; 
+
+    document.getElementById('aguardando').value = '';
+    document.getElementById('pendencias').value = '';
+    document.getElementById('medico').value = '';
+    document.getElementById('dieta').value = '';
+    
+    document.getElementById('aguardando_vaga').value = '';
+    document.getElementById('conduta').value = '';
+    document.getElementById('hospital').value = '';
+
+    document.querySelectorAll('#escala_adulto input, #escala_ped input, #escala_adulto select, #escala_ped select').forEach(i => i.value = '');
+    document.querySelectorAll('.risk-label').forEach(s => { s.textContent = ''; s.style.display = 'none'; });
+
+    document.getElementById('container_metas').innerHTML = '';
+    
+    document.getElementById('escala_adulto').style.display = 'none';
+    document.getElementById('escala_ped').style.display = 'none';
+}
+
+function calcRisco(escala, val, labelId) {
+    const lbl = document.getElementById(labelId);
+    if(!lbl || val === "" || isNaN(parseFloat(val))) { 
+        if(lbl) lbl.style.display = 'none'; 
+        return; 
+    }
+    val = parseFloat(val);
+    let texto = "";
+    let classe = "";
+
+    if (escala === 'iris') {
+        if(val < 5) { texto = "Reduzido"; classe = "risk-low"; }
+        else if(val <= 9) { texto = "Intermédio"; classe = "risk-med"; }
+        else { texto = "Elevado"; classe = "risk-high"; }
+    } else if (escala === 'morse') {
+        if(val <= 24) { texto = "Baixo"; classe = "risk-low"; }
+        else if(val <= 44) { texto = "Médio"; classe = "risk-med"; }
+        else { texto = "Alto"; classe = "risk-high"; }
+    } else if (escala === 'humpty') {
+        if(val <= 10) { texto = "Baixo"; classe = "risk-low"; }
+        else if(val <= 14) { texto = "Médio"; classe = "risk-med"; }
+        else { texto = "Alto"; classe = "risk-high"; }
+    } else if (escala === 'braden') {
+        if(val >= 19) { texto = "Baixo"; classe = "risk-low"; } 
+        else if(val >= 15) { texto = "Leve"; classe = "risk-med"; }
+        else if(val >= 13) { texto = "Moderado"; classe = "risk-med"; }
+        else if(val >= 10) { texto = "Alto"; classe = "risk-high"; }
+        else { texto = "Muito Alto"; classe = "risk-high"; }
+    }
+    
+    lbl.style.display = 'inline-block';
+    lbl.innerHTML = texto;
+    lbl.className = "risk-label " + classe;
+}
+
+const nascimentoInput = document.getElementById('nascimento');
+const escalaAdulto = document.getElementById("escala_adulto");
+const escalaPed = document.getElementById("escala_ped");
+const tipoPaciente = document.getElementById('tipo_paciente');
+
+const calcularTipoPaciente = () => {
+  if(!nascimentoInput.value) {
+        tipoPaciente.value = "";
+        escalaAdulto.style.display = "none";
+        escalaPed.style.display = "none";
+        return;
+    }
+  const nasc = new Date(nascimentoInput.value);
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) { idade--; }
+  
+  const tipo = idade <= 12 ? "pediatrico" : "adulto";
+  tipoPaciente.value = tipo;
+  escalaAdulto.style.display = tipo === "adulto" ? "block" : "none";
+  escalaPed.style.display = tipo === "pediatrico" ? "block" : "none";
 };
+nascimentoInput.onchange = calcularTipoPaciente;
 
-function verificarLogin() {
-  if(localStorage.getItem('usuarioLogado')) return;
-  document.getElementById('loginPopup').style.display='flex';
+function calcIdade(dataStr) {
+    if(!dataStr) return "--";
+    const nasc = new Date(dataStr);
+    const diff = Date.now() - nasc.getTime();
+    return Math.abs(new Date(diff).getUTCFullYear() - 1970);
 }
 
-document.getElementById('loginBtn').addEventListener('click',()=>{
-  const u=document.getElementById('user').value.trim();
-  const p=document.getElementById('pass').value.trim();
-  if(usuarios[u] && usuarios[u]===p){
-    localStorage.setItem('usuarioLogado',u);
-    document.getElementById('loginPopup').style.display='none';
-  } else {
-    alert('Usuário ou senha inválidos');
-  }
-});
-
-async function fetchList(){
-  const r = await fetch(LIST_URL);
-  return await r.json();
+function formatDate(dt) {
+    if(!dt) return "--";
+    const dataHora = new Date(dt);
+    const dataFormatada = dataHora.toLocaleDateString('pt-BR');
+    const horaFormatada = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `${dataFormatada}<br><span style="color:#64748b; font-size:0.9em">${horaFormatada}</span>`; 
 }
 
-function valorSeguro(v) {
-  return (v && v !== "undefined" && v !== "") ? v : "--";
+async function carregarTabela() {
+    try {
+        const r = await fetch(API_BASE + '?action=list');
+        const json = await r.json();
+        const tbody = document.querySelector("#tabela tbody");
+        tbody.innerHTML = "";
+        if (!json.data) return;
+
+        listaPacientes = json.data;
+
+        json.data.forEach(p => {
+            const tr = document.createElement("tr");
+            const estaLivre = (p.status === 'livre');
+            let classeLinha = "";
+            let nomeExibicao = "";
+            let acoesHTML = "";
+            let infoRiscos = "";
+            let infoMetas = "";
+            let dataEntrada = "";
+            let idade = "";
+            let permanencia = ""; 
+
+            if (estaLivre) {
+                classeLinha = "row-livre";
+                nomeExibicao = "<span style='font-style:italic;'>-- Disponível --</span>";
+                infoMetas = "-";
+                acoesHTML = `<button class="btn-primary" style="padding: 6px 12px; font-size:0.85em;" onclick="preencherNovo('${p.leito}', '${p.local}')">➕ Ocupar Leito</button>`;
+                idade = '--'; dataEntrada = '--';
+            } else {
+                const pendenciasTexto = (p.pendencias || '').toLowerCase();
+                const aguardandoVagaTexto = (p.aguardando_vaga || '').toLowerCase();
+                const condutaNao = (p.conduta || '').toLowerCase() === 'não';
+                const isCrlNao = (condutaNao && (aguardandoVagaTexto.includes('crl') || aguardandoVagaTexto.includes('vaga')));
+                
+                nomeExibicao = `<strong style="color:var(--text-main); font-size: 1.05em;">${p.nome}</strong><br><span style="font-size:0.85em; color:var(--text-muted);">Atend: ${p.atendimento || '--'}</span>`;
+                
+                try {
+                    const metasObj = JSON.parse(p.observacao || '[]');
+                    if (Array.isArray(metasObj) && metasObj.length > 0) {
+                        infoMetas = '<ul style="margin:0; padding-left:20px; font-size:0.9em;">';
+                        metasObj.forEach(m => {
+                            let icone = m.status === 'Realizada' ? '✅' : (m.status === 'NaoRealizada' ? '❌' : '➖');
+                            let motivoTxt = (m.status === 'NaoRealizada' && m.motivo) ? ` <em>(${m.motivo})</em>` : '';
+                            infoMetas += `<li>${icone} ${m.texto}${motivoTxt}</li>`;
+                        });
+                        infoMetas += '</ul>';
+                    } else if (p.observacao && p.observacao.trim() !== "" && !p.observacao.startsWith('[')) {
+                        infoMetas = p.observacao;
+                    } else {
+                        infoMetas = '<span style="color:#94a3b8; font-size:0.9em;">Nenhuma meta registrada</span>';
+                    }
+                } catch(e) { infoMetas = p.observacao || ''; }
+                
+                if(p.obs_clinica) {
+                    infoMetas += `<div style="margin-top:8px; border-top:1px dashed #cbd5e1; padding-top:6px; font-size:0.9em; color:#475569;"><strong>Obs. Clínica:</strong> ${p.obs_clinica}</div>`;
+                }
+
+                if (isCrlNao) {
+                    classeLinha = "row-crl-nao"; 
+                    infoMetas = `<strong style="color:#dc3545; font-size:0.9em; display:block; margin-bottom:5px;">⚠️ AGUARDANDO VAGA / CRL</strong>` + infoMetas;
+                } else if (p.aguardando_vaga && p.aguardando_vaga.trim() !== "") {
+                    classeLinha = "row-destaque"; 
+                    infoMetas = `<strong style="color:#b45309; font-size:0.9em; display:block; margin-bottom:5px;">⚠️ ALERTA: ${p.aguardando_vaga}</strong>` + infoMetas;
+                } else if (condutaNao) {
+                    classeLinha = "row-alerta-conduta"; 
+                    infoMetas = `<strong style="color:#2563eb; font-size:0.9em; display:block; margin-bottom:5px;">ℹ️ CONDUTA PENDENTE</strong>` + infoMetas;
+                }
+
+                idade = calcIdade(p.nascimento) + " anos";
+                
+                if (p.entrada) {
+                    dataEntrada = formatDate(p.entrada);
+                    const diffHrs = Math.floor((new Date() - new Date(p.entrada)) / (1000 * 60 * 60));
+                    const diffDias = Math.floor(diffHrs / 24);
+                    let tempoStr = diffDias > 0 ? `${diffDias}d ${diffHrs % 24}h` : `${diffHrs}h`;
+                    permanencia = `<br><span style="font-size:0.85em; color:var(--primary); font-weight:700; background:#eff6ff; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">${tempoStr}</span>`;
+                } else { dataEntrada = "--"; }
+                
+                let riscos = [];
+                if(p.tipo_paciente === 'adulto') {
+                    if (p.news) riscos.push(`NEWS: <strong>${p.news}</strong>`);
+                    if (p.braden_adulto) riscos.push(`Braden: <strong>${p.braden_adulto}</strong>`);
+                    if (p.morse) riscos.push(`Morse: <strong>${p.morse}</strong>`);
+                } else if (p.tipo_paciente === 'pediatrico') {
+                    if (p.pews) riscos.push(`PEWS: <strong>${p.pews}</strong>`);
+                    if (p.humpty) riscos.push(`Humpty: <strong>${p.humpty}</strong>`);
+                    if (p.braden_ped) riscos.push(`Braden: <strong>${p.braden_ped}</strong>`);
+                }
+                infoRiscos = riscos.length > 0 ? riscos.join('<br>') : '<span style="color:#94a3b8">--</span>';
+
+                acoesHTML = `
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <button class="btn-secondary" style="padding:6px 10px; font-size:0.85em;" onclick="editar(${p.id})">✏️ Editar</button>
+                        <button class="btn-secondary" style="padding:6px 10px; font-size:0.85em; color:var(--danger); border-color:#fca5a5;" onclick="deletar(${p.id})">🚪 Dar Alta</button>
+                    </div>
+                `;
+            }
+
+            tr.className = classeLinha;
+            let labelExtra = p.leito.includes(" (Extra)") ? '<br><span style="background:#fee2e2; color:#991b1b; padding:2px 4px; border-radius:4px; font-size:0.75em; font-weight:bold;">EXTRA</span>' : '';
+            
+            tr.innerHTML = `
+                <td>
+                    <strong style="font-size:1.15em; color:var(--text-main);">${p.leito.replace(" (Extra)", "")}</strong>${labelExtra}<br>
+                    <span style="font-size:0.85em; color:var(--text-muted);">${p.local}</span>
+                </td>
+                <td>${nomeExibicao}</td>
+                <td>${idade}</td>
+                <td><div style="font-size:0.9em; line-height:1.4;">${infoRiscos}</div></td>
+                <td>${infoMetas}</td>
+                <td>${dataEntrada}${permanencia}</td>
+                <td>${acoesHTML}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) { console.error(error); }
 }
 
-async function carregarTabela(){
-  const r = await fetchList();
-  const tbody = document.querySelector('#tabela tbody');
-  tbody.innerHTML='';
-  if(!r.success) return;
-
-  r.data.forEach(p=>{
-    const tr=document.createElement('tr');
-
-    const more = `
-      <div class="small">
-        Nasc: ${valorSeguro(p.nascimento)}<br/>
-        Atendimento: ${valorSeguro(p.atendimento)}<br/>
-        Pend: ${valorSeguro(p.pendencias)}<br/>
-        Médico: ${valorSeguro(p.medico)}<br/>
-        Conduta: ${valorSeguro(p.conduta)}<br/>
-        Dieta: ${valorSeguro(p.dieta)}<br/>
-        Hospital: ${valorSeguro(p.hospital)}<br/>
-        Obs: ${valorSeguro(p.observacao)}<br/>
-        Aguardando vaga: ${valorSeguro(p.aguardando_vaga)}
-      </div>`;
-
-    tr.innerHTML = `
-      <td>${valorSeguro(p.nome)}</td>
-      <td>${valorSeguro(p.leito)}</td>
-      <td>${valorSeguro(p.local)}</td>
-      <td>${valorSeguro(p.aguardando)}</td>
-      <td>${valorSeguro(p.entrada)}</td>
-      <td>${more}</td>
-      <td>
-        <button data-id="${p.id}" class="edit">✏️</button>
-        <button data-id="${p.id}" class="rem">🗑️</button>
-      </td>`;
-
-    tbody.appendChild(tr);
-  });
-
-  // Remover
-  document.querySelectorAll('.rem').forEach(btn=>{
-    btn.addEventListener('click', async e=>{
-      const id = e.target.dataset.id;
-      if(!confirm('Remover paciente?')) return;
-      const resp = await fetch(REMOVE_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({id: id})
-      });
-      const j = await resp.json();
-      if(j.success) carregarTabela(); else alert(j.message || 'Erro');
-    });
-  });
-
-  // Editar
-  document.querySelectorAll('.edit').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      const id = e.target.dataset.id;
-      const p = r.data.find(x=>x.id==id);
-      if(!p) return;
-      document.getElementById('id_editando').value=p.id;
-      for(const campo in p){
-        if(document.getElementById(campo))
-          document.getElementById(campo).value=p[campo];
-      }
-      document.getElementById('btnSalvar').textContent='Salvar Alterações';
-    });
-  });
+function preencherNovo(leitoNum, localNome) {
+    limparForm(); 
+    if(leitoNum.includes("(Extra)")) {
+        document.getElementById('leito_extra').checked = true;
+        leitoNum = leitoNum.replace(" (Extra)", "").trim();
+    }
+    document.getElementById('leito').value = leitoNum;
+    document.getElementById('local').value = localNome;
+    adicionarMeta();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => document.getElementById('nome').focus(), 500);
 }
 
-// Adicionar / Atualizar
-document.getElementById('formPaciente').addEventListener('submit', async ev=>{
+async function deletar(id) {
+    if (confirm('Confirmar ALTA e arquivamento deste paciente? (Os dados continuarão salvos no relatório).')) {
+        try {
+            const resp = await fetch(`${API_BASE}?action=delete`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: id }) });
+            const json = await resp.json();
+            if (json.success) carregarTabela();
+            else alert("Erro ao realizar alta: " + (json.message || ""));
+        } catch (e) { alert("Erro de conexão ao tentar realizar alta."); }
+    }
+}
+
+const formPaciente = document.querySelector('form');
+
+formPaciente.onsubmit = async (ev) => {
   ev.preventDefault();
-  const idEdit = document.getElementById('id_editando').value;
-  const action = idEdit ? 'update' : 'add';
-  const payload = {
-    id: idEdit || undefined,
-    nome: document.getElementById('nome').value.trim(),
-    leito: parseInt(document.getElementById('leito').value || 0),
+  const idEd = document.getElementById('id_editando').value;
+  const action = idEd ? "update" : "add";
+  
+  let leitoFinal = document.getElementById('leito').value;
+  if(document.getElementById('leito_extra').checked) leitoFinal += " (Extra)";
+
+  const isAdulto = document.getElementById('escala_adulto').style.display === "block";
+  const isPed = document.getElementById('escala_ped').style.display === "block";
+
+  const data = {
+    id: idEd,
+    nome: document.getElementById('nome').value,
+    leito: leitoFinal, 
     local: document.getElementById('local').value,
     nascimento: document.getElementById('nascimento').value,
+    tipo_paciente: document.getElementById('tipo_paciente').value,
     atendimento: document.getElementById('atendimento').value,
+    obs_clinica: document.getElementById('obs_clinica').value,
     aguardando: document.getElementById('aguardando').value,
     pendencias: document.getElementById('pendencias').value,
     medico: document.getElementById('medico').value,
-    conduta: document.getElementById('conduta').value,
     dieta: document.getElementById('dieta').value,
+    glasgow_adulto: isAdulto && document.getElementById('glasgow_valor_adulto').value ? document.getElementById('glasgow_tipo_adulto').value + ": " + document.getElementById('glasgow_valor_adulto').value : '',
+    iris_adulto: isAdulto ? document.getElementById('iris_adulto').value : '',
+    morse: isAdulto ? document.getElementById('morse').value : '',
+    braden_adulto: isAdulto ? document.getElementById('braden_adulto').value : '',
+    dor_adulto: isAdulto && document.getElementById('dor_valor_adulto').value ? document.getElementById('dor_tipo_adulto').value + ": " + document.getElementById('dor_valor_adulto').value : '',
+    news: isAdulto ? document.getElementById('news').value : '',
+    meows: isAdulto ? document.getElementById('meows').value : '',
+    glasgow_ped: isPed && document.getElementById('glasgow_valor_ped').value ? document.getElementById('glasgow_tipo_ped').value + ": " + document.getElementById('glasgow_valor_ped').value : '',
+    iris_ped: isPed ? document.getElementById('iris_ped').value : '',
+    humpty: isPed ? document.getElementById('humpty').value : '',
+    braden_ped: isPed ? document.getElementById('braden_ped').value : '',
+    dor_ped: isPed && document.getElementById('dor_valor_ped').value ? document.getElementById('dor_tipo_ped').value + ": " + document.getElementById('dor_valor_ped').value : '',
+    pews: isPed ? document.getElementById('pews').value : '',
     hospital: document.getElementById('hospital').value,
-    observacao: document.getElementById('observacao').value,
-    aguardando_vaga: document.getElementById('aguardando_vaga').value
+    observacao: obterMetasJSON(), 
+    aguardando_vaga: document.getElementById('aguardando_vaga').value,
+    conduta: document.getElementById('conduta').value
   };
-  const resp = await fetch(`${API_BASE}?action=${action}`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  });
-  const j = await resp.json();
-  if(j.success){
-    document.getElementById('formPaciente').reset();
-    document.getElementById('id_editando').value='';
-    document.getElementById('btnSalvar').textContent='Adicionar';
-    carregarTabela();
-  } else alert(j.message || 'Erro ao salvar');
-});
 
-document.getElementById('limpar').addEventListener('click', async ()=>{
-  if(!confirm('Apagar todos os registros?')) return;
-  const list = await fetchList();
-  if(!list.success) return;
-  for(const p of list.data){
-    await fetch(REMOVE_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({id:p.id})
-    });
-  }
-  carregarTabela();
-});
+  try {
+      const resp = await fetch(`${API_BASE}?action=${action}`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
+      const j = await resp.json();
+      if (!j.success) return alert("Erro ao salvar! " + (j.message || ""));
+      limparForm();
+      carregarTabela();
+  } catch (err) { alert("Erro de comunicação com o servidor."); }
+};
 
-verificarLogin();
-carregarTabela();
-</script>
+function editar(id) {
+    const p = listaPacientes.find(pac => pac.id == id);
+    if (!p) return alert("Erro ao encontrar dados do paciente.");
 
+    limparForm(); 
+    document.getElementById('id_editando').value = p.id;
+    document.getElementById('nome').value = p.nome;
+    
+    let l = p.leito;
+    if(l && l.includes("(Extra)")) {
+        document.getElementById('leito_extra').checked = true;
+        l = l.replace(" (Extra)", "").trim();
+    }
+    document.getElementById('leito').value = l;
+    document.getElementById('local').value = p.local;
+    
+    if (p.nascimento) {
+      document.getElementById('nascimento').value = p.nascimento.split(" ")[0]; 
+      calcularTipoPaciente();
+    }
+    document.getElementById('atendimento').value = p.atendimento;
+    document.getElementById('obs_clinica').value = p.obs_clinica || '';
+    document.getElementById('aguardando').value = p.aguardando;
+    document.getElementById('pendencias').value = p.pendencias;
+    document.getElementById('medico').value = p.medico;
+    document.getElementById('dieta').value = p.dieta;
+    
+    if(p.observacao) {
+        try {
+            const metas = JSON.parse(p.observacao);
+            if(Array.isArray(metas)) {
+                document.getElementById('container_metas').innerHTML = '';
+                metas.forEach(m => adicionarMeta(m));
+            } else { adicionarMeta({texto: p.observacao}); }
+        } catch(e) { adicionarMeta({texto: p.observacao}); }
+    } else { adicionarMeta(); }
 
+    document.getElementById('hospital').value = p.hospital;
+    document.getElementById('aguardando_vaga').value = p.aguardando_vaga;
+    document.getElementById('conduta').value = p.conduta;
+    
+    const parseScale = (val) => val && val.includes(":") ? val.split(":").map(s => s.trim()) : ['', ''];
+    if(p.tipo_paciente === 'adulto') {
+        let [gType, gVal] = parseScale(p.glasgow_adulto);
+        document.getElementById('glasgow_tipo_adulto').value = gType || 'Glasgow';
+        document.getElementById('glasgow_valor_adulto').value = gVal || '';
+        document.getElementById('iris_adulto').value = p.iris_adulto || '';
+        document.getElementById('morse').value = p.morse || '';
+        document.getElementById('braden_adulto').value = p.braden_adulto || '';
+        let [dType, dVal] = parseScale(p.dor_adulto);
+        document.getElementById('dor_tipo_adulto').value = dType || 'Dor';
+        document.getElementById('dor_valor_adulto').value = dVal || '';
+        document.getElementById('news').value = p.news || '';
+        document.getElementById('meows').value = p.meows || '';
+        calcRisco('iris', p.iris_adulto, 'lbl_iris_ad');
+        calcRisco('morse', p.morse, 'lbl_morse');
+        calcRisco('braden', p.braden_adulto, 'lbl_braden_ad');
+    } else if(p.tipo_paciente === 'pediatrico') {
+        let [gType, gVal] = parseScale(p.glasgow_ped);
+        document.getElementById('glasgow_tipo_ped').value = gType || 'Glasgow';
+        document.getElementById('glasgow_valor_ped').value = gVal || '';
+        document.getElementById('iris_ped').value = p.iris_ped || '';
+        document.getElementById('humpty').value = p.humpty || '';
+        document.getElementById('braden_ped').value = p.braden_ped || '';
+        let [dType, dVal] = parseScale(p.dor_ped);
+        document.getElementById('dor_tipo_ped').value = dType || 'Dor';
+        document.getElementById('dor_valor_ped').value = dVal || '';
+        document.getElementById('pews').value = p.pews || '';
+        calcRisco('iris', p.iris_ped, 'lbl_iris_ped');
+        calcRisco('humpty', p.humpty, 'lbl_humpty');
+        calcRisco('braden', p.braden_ped, 'lbl_braden_ped');
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-
-verificarLogin();
 carregarTabela();
 </script>
 </body>

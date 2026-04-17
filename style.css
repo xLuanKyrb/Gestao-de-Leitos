@@ -47,8 +47,8 @@ input, select {
   padding: 6px;
   border-radius: 5px;
   border: 1px solid #ccc;
-  flex: 1;
-  min-width: 120px;
+  margin-bottom: 5px;
+  flex: auto;
 }
 
 .table {
@@ -158,19 +158,46 @@ input, select {
 }
 
 .item-legenda .cor.livre {
-  background-color: #2ecc71;
+  background-color: #e5e7eb; 
 }
 
 .item-legenda .cor.ocupado {
-  background-color: #e37467;
+  background-color: #bbf7d0; 
 }
 
+.item-legenda .cor.risco {
+  background-color: #fecaca;
+}
+
+
 .leito.livre {
-  background-color: #58d78d;
-  color: #fff;
+  background-color: #e5e7eb !important;
+  color: #0b1a2b;
 }
 
 .leito.ocupado {
-  background-color: #e26b5e;
-  color: #fff;
+  background-color: #bbf7d0 !important;
+  color: #0b1a2b;
+}
+
+.leito.risco {
+  background-color: #fecaca !important;
+  color: #0b1a2b;
+}
+
+@media print {
+    
+    .blocks {
+        display: flex; 
+        flex-wrap: wrap;
+        gap: 5px; 
+        column-count: 3; 
+        padding: 0 !important;
+    }
+
+    .block {
+        padding: 5px !important;
+        margin-bottom: 5px !important;
+        break-inside: avoid;
+    }
 }
