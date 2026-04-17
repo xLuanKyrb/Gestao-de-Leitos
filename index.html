@@ -5,221 +5,526 @@
 <title>Gestão de Leitos UPA - Santa Paula</title>
 <link rel="stylesheet" href="./style.css">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link rel="icon" href="logo.png" type="image/svg+xml">
 <style>
-  #grafico-container {
-    position: fixed;
-    bottom: 20px;
-    right: 200px;
-    width: 140px;   
-    height: 180px;    
-    background: #ffffffcc;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    padding: 6px;   
-    z-index: 999;
-    backdrop-filter: blur(6px);
+/* ========================================================
+   VARIÁVEIS DE TEMA (CLARO E ESCURO)
+   ======================================================== */
+:root {
+    --bg-body: #e2e8f0;
+    --bg-panel: #ffffff;
+    --text-main: #0f172a;
+    --border-color: rgba(0,0,0,0.08);
+    --border-livre: #94a3b8;
+    --text-livre: #64748b;
+    --shadow: 0 4px 6px rgba(0,0,0,0.1);
+    --btn-bg: #fff;
+    --btn-border: #cbd5e1;
+    --btn-text: #334155;
+    --relogio-cor: #0f172a;
+}
+
+body.dark-theme {
+    --bg-body: #020617;        
+    --bg-panel: #0f172a;       
+    --text-main: #f8fafc;      
+    --border-color: rgba(255,255,255,0.1);
+    --border-livre: #475569;
+    --text-livre: #94a3b8;
+    --shadow: 0 4px 6px rgba(0,0,0,0.5);
+    --btn-bg: #1e293b;
+    --btn-border: #334155;
+    --btn-text: #f8fafc;
+    --relogio-cor: #f8fafc;
+}
+
+/* ========================================================
+   BASE (TRAVADO EM 1 TELA - SEM ROLAGEM)
+   ======================================================== */
+body { 
+    font-size: 0.95rem; 
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    margin: 0;
+    height: 100vh; 
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-  }
+    overflow: hidden; 
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
 
-  #grafico-container h4 {
-    text-align: center;
-    margin: 4px 0;
-    font-size: 13px; 
-  }
-
-  #graficoLeitos {
-    width: 100px !important;   
-    height: 100px !important; 
-  }
-
-  #contagem-leitos {
+/* ========================================================
+   ÁREA DE CONTEÚDO (FLEXBOX CONTROLADO VIA JS)
+   ======================================================== */
+#conteudo-principal {
+    flex: 1; 
+    padding: 10px;
+    box-sizing: border-box;
     display: flex;
-    justify-content: space-around;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.blocks {
+    display: flex;
+    flex-direction: row; /* Coloca as colunas lado a lado */
+    gap: 15px;
+    height: 100%;
     width: 100%;
-    margin-bottom: 3px;
-  }
+}
 
-  .contador {
+.coluna-container {
+    flex: 1; /* Garante que todas as colunas tenham a mesma largura */
     display: flex;
+    flex-direction: column;
+    gap: 10px; /* Distância entre a Pediátrica e o Isolamento */
+    height: 100%;
+    overflow: hidden; /* Oculta a rolagem para o JS medir o estouro */
+}
+
+.block {
+    background-color: var(--bg-panel); 
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease;
+}
+
+/* Cores pastéis apenas no tema claro */
+body:not(.dark-theme) .block[data-setor="Observação Masculina"] { background-color: #eff6ff !important; }
+body:not(.dark-theme) .block[data-setor="Observação Feminina"] { background-color: #fff1f2 !important; }
+body:not(.dark-theme) .block[data-setor="Observação Pediátrica"] { background-color: #ecfdf5 !important; }
+body:not(.dark-theme) .block[data-setor="Isolamentos"] { background-color: #fffbeb !important; }
+
+.block-header {
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 4px;
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+    color: var(--text-main);
+    text-align: center;
+    font-weight: 800;
+}
+
+/* ========================================================
+   ESTILOS DOS CARDS
+   ======================================================== */
+.leito {
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 3px; 
+}
+
+/* Cores de Status */
+.leito.ocupado { background: #15803d !important; color: #ffffff; }
+.leito.alterado { background: #d97706 !important; color: #ffffff; }
+.leito.risco { background: #dc2626 !important; color: #ffffff; }
+.leito.destaque-especial { border: 2px solid #fde047 !important; }
+
+/* LEITO LIVRE */
+.leito.livre { 
+    background: var(--bg-body) !important; 
+    border: 1px dashed var(--border-livre);
+    color: var(--text-livre) !important;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    gap: 4px;
-    font-weight: bold;
-    font-size: 11px; 
-  }
+    box-shadow: none;
+}
 
-  .quadrado {
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-  }
+/* Interior do Card */
+.leito-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 4px;
+}
 
-  .livre {
-    background-color: #4ade80;
-  }
+.badge-leito { font-size: 1em; font-weight: 900; background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; white-space: nowrap; margin-right: 6px; }
+.nome-paciente { font-size: 1.15em; font-weight: 900; text-transform: uppercase; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); line-height: 1; }
+.dados-secundarios { font-size: 0.8em; opacity: 0.95; margin-top: 2px; }
+.escalas-container { display: flex; flex-wrap: wrap; gap: 3px; }
+.badge-escala { background: rgba(0, 0, 0, 0.2); padding: 2px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; }
+.alerta-urgente { background: #ea580c; color: white; padding: 3px; border-radius: 4px; text-align: center; font-weight: 800; font-size: 0.8em; text-transform: uppercase; }
+.leito-footer { display: flex; justify-content: space-between; font-size: 0.8em; background: rgba(0, 0, 0, 0.15); padding: 3px 6px; border-radius: 4px; margin-top: 2px; }
 
-  .ocupado {
-    background-color: #ef4444;
-  }
+/* ========================================================
+   RODAPÉ INFERIOR
+   ======================================================== */
+.footer-bottom {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 6px 15px; 
+    background-color: var(--bg-panel); 
+    box-shadow: 0 -2px 5px var(--border-color); 
+    height: 38px; 
+    flex-shrink: 0;
+    border-top: 1px solid var(--border-color);
+    transition: background-color 0.3s ease;
+}
+
+.legenda-inline { display: flex; gap: 15px; font-size: 0.85em; font-weight: bold; align-items: center; }
+.quadrado { width: 12px; height: 12px; border-radius: 2px; display:inline-block; vertical-align: middle; margin-right: 4px;}
+.q-livre { background: var(--bg-body); border: 1px dashed var(--border-livre); }    
+.q-normal { background: #15803d; }   
+.q-alterada { background: #d97706; } 
+.q-risco { background: #dc2626; }  
+
+.btn-footer { padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85em; border: none; }
+.btn-footer.primario { background-color: #64748b; color: white; }
+.btn-footer.outline { background-color: var(--btn-bg); color: var(--btn-text); border: 1px solid var(--btn-border); }
+#relogio { color: var(--relogio-cor); }
+
+@media print {
+    .no-print { display: none !important; }
+    body { height: auto; overflow: visible; background: #fff; }
+    .blocks { display: flex; flex-direction: row; gap: 10px; }
+}
 </style>
 </head>
 
 <body>
-<header style="display:flex;justify-content:space-between;align-items:center">
-  <h1>Gestão de Leitos</h1>
-  <div><a href="./admin"><button class="secondary">Resgistrar Leitos</button></a>
-    <a href="../relatorio"><button class="secondary">Relatórios</button></a> </div>
-</header>
 
-<div id="legenda-status">
-  <div class="item-legenda">
-    <span class="cor livre"></span> Livre
-  </div>
-  <div class="item-legenda">
-    <span class="cor ocupado"></span> Ocupado
-  </div>
+<div id="conteudo-principal">
+    <div id="cabecalho-pdf" class="no-print" style="display:none; padding: 10px; text-align: center; font-size: 1.2em; font-weight: bold; border-bottom: 2px solid #ccc; margin-bottom: 10px;">
+        Relatório de Ocupação - UPA Santa Paula <br><span id="data-pdf" style="font-size: 0.8em; font-weight: normal;"></span>
+    </div>
+    <div id="blocks" class="blocks">
+        </div>
 </div>
 
-<div id="blocks" class="blocks"></div>
+<footer class="no-print footer-bottom">
+    <div id="relogio" style="font-weight:900; font-size:1.1em;"></div>
 
-<div id="grafico-container">
-  <h4>Situação dos Leitos</h4>
-  <canvas id="graficoLeitos"></canvas>
-  <div id="contagem-leitos">
-    <div class="contador"><span class="quadrado livre"></span><span id="qtLivres">0</span></div>
-    <div class="contador"><span class="quadrado ocupado"></span><span id="qtOcupados">0</span></div>
-  </div>
-</div>
+    <div class="legenda-inline">
+        <div><span class="quadrado q-livre"></span> Livre</div>
+        <div><span class="quadrado q-normal"></span> Normal</div>
+        <div><span class="quadrado q-alterada"></span> Alterado</div>
+        <div><span class="quadrado q-risco"></span> Risco</div>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+        <button id="btn-theme" class="btn-footer outline" onclick="toggleTheme()" title="Alternar Modo Escuro">🌙 Escuro</button>
+        <button class="btn-footer primario" onclick="gerarPDF()">📄 PDF</button>
+        <a href="admin/"><button class="btn-footer outline">Admin</button></a>
+        <a href="sala/"><button class="btn-footer outline">Salas</button></a>
+    </div>
+</footer>
 
 <script>
 const LIST_URL = './api.php?action=list';
-const UPDATE_INTERVAL = 30000;
+const UPDATE_INTERVAL = 15000; 
 
-const cores = {
-  "Observação Masculina": "#dbeafe",
-  "Observação Feminina": "#ffeef6",
-  "Observação Pediátrica": "#e6fffa",
-  "Isolamento Adulto": "#fff7cc",
-  "Isolamento Pediátrico": "#f3e8ff"
-};
+// --- LÓGICA DO TEMA ESCURO ---
+function toggleTheme() {
+    document.body.classList.toggle('dark-theme');
+    const isDark = document.body.classList.contains('dark-theme');
+    localStorage.setItem('upa_theme', isDark ? 'dark' : 'light');
+    atualizarBotaoTema();
+}
+
+function atualizarBotaoTema() {
+    const isDark = document.body.classList.contains('dark-theme');
+    const btn = document.getElementById('btn-theme');
+    btn.innerHTML = isDark ? '☀️ Claro' : '🌙 Escuro';
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('upa_theme');
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+        document.body.classList.add('dark-theme');
+    }
+    atualizarBotaoTema();
+}
 
 function formatarIniciais(nome){
   if(!nome) return '';
-  return nome.split(/\s+/)
-             .filter(p=>p.length>1)
-             .map(p=>p.charAt(0).toUpperCase()+'.')
-             .join(' ');
+  const partes = nome.trim().split(/\s+/);
+  if(partes.length === 1) return partes[0];
+  let iniciais = partes[0];
+  for(let i=1; i < partes.length; i++){
+      if(partes[i].length > 2) { 
+          iniciais += " " + partes[i].charAt(0).toUpperCase() + ".";
+      }
+  }
+  return iniciais;
+}
+
+function v(val) { return val ? val : '-'; }
+
+function calcularCorStatus(p) {
+    if (!p.id || p.status === 'livre') return 'livre';
+    let riscoAlto = false;
+    let alterado = false;
+    const n = (val) => parseInt(val) || 0;
+
+    if (n(p.news) >= 7) riscoAlto = true;
+    if (n(p.pews) >= 7) riscoAlto = true;
+    if (n(p.morse) > 45) riscoAlto = true;
+    if (n(p.humpty) > 50) riscoAlto = true;
+    if (n(p.iris_adulto) >= 10 || n(p.iris_ped) >= 10) riscoAlto = true;
+    if (p.braden_adulto && n(p.braden_adulto) > 0 && n(p.braden_adulto) <= 12) riscoAlto = true;
+    if (p.braden_ped && n(p.braden_ped) > 0 && n(p.braden_ped) <= 12) riscoAlto = true;
+
+    if (riscoAlto) return 'risco';
+
+    if (n(p.news) >= 4 && n(p.news) <= 6) alterado = true;
+    if (n(p.pews) >= 4 && n(p.pews) <= 6) alterado = true;
+    if (n(p.morse) >= 25 && n(p.morse) <= 45) alterado = true;
+    if (n(p.humpty) >= 25 && n(p.humpty) <= 50) alterado = true;
+
+    if (alterado) return 'alterado';
+    return 'ocupado'; 
 }
 
 function montarCard(p){
-  const classeStatus = p.status === 'livre' ? 'leito livre' : 'leito ocupado';
-  const nomeExibir = p.status === 'livre' ? 'Livre' : formatarIniciais(p.nome);
-  
-  return `<div class="${classeStatus}">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div><strong>Leito ${p.leito} — ${nomeExibir}</strong></div>
-      <div class="muted">${p.entrada || '-'}</div>
+  if (p.status === 'livre') {
+      return `
+      <div class="leito livre">
+          <strong>L${p.leito}</strong>
+          <span style="font-size: 0.8em; font-weight: bold;">LIVRE</span>
+      </div>`;
+  }
+
+  const statusCor = calcularCorStatus(p);
+  let destaqueClass = p.aguardando_vaga ? 'destaque-especial' : '';
+  let iconeAlerta = p.aguardando_vaga ? '⚠️ ' : '';
+
+  const nomeExibir = formatarIniciais(p.nome);
+  const idade = p.nascimento ? calcularIdade(p.nascimento) + 'a' : '';
+  const dataNascStr = p.nascimento ? p.nascimento.split('-').reverse().join('/') : '--/--/--';
+  const numAtendimento = p.atendimento ? p.atendimento : '-';
+
+  let escalasHTML = '';
+  if (p.tipo_paciente === 'adulto') {
+      escalasHTML = `
+        <div class="escalas-container">
+          <span class="badge-escala">NEWS: ${v(p.news)}</span>
+          <span class="badge-escala">BRADEN: ${v(p.braden_adulto)}</span>
+          <span class="badge-escala">MORSE: ${v(p.morse)}</span>
+          <span class="badge-escala">IRIS: ${v(p.iris_adulto)}</span>
+        </div>`;
+  } else {
+      escalasHTML = `
+        <div class="escalas-container">
+          <span class="badge-escala">PEWS: ${v(p.pews)}</span>
+          <span class="badge-escala">HUMPTY: ${v(p.humpty)}</span>
+          <span class="badge-escala">BRADEN: ${v(p.braden_ped)}</span>
+          <span class="badge-escala">IRIS: ${v(p.iris_ped)}</span>
+        </div>`;
+  }
+
+  let metasContent = '';
+  if (p.observacao && p.observacao.trim() !== "" && p.observacao.trim() !== "[]") {
+      metasContent = `<div style="background:rgba(0,0,0,0.15); padding:3px 5px; border-radius:3px; font-size:0.8em; line-height:1.1;">${p.observacao}</div>`;
+  }
+
+  return `
+  <div class="leito ${statusCor} ${destaqueClass}">
+    <div class="leito-header">
+      <div style="display:flex; align-items:center;">
+          <div class="badge-leito">${iconeAlerta}L${p.leito}</div>
+          <div>
+              <div class="nome-paciente">${nomeExibir}</div>
+              <div class="dados-secundarios">
+                  <strong>${numAtendimento}</strong> | Nasc: <strong>${dataNascStr} (${idade})</strong>
+              </div>
+          </div>
+      </div>
+      <div style="font-size: 0.75em; text-align:right; line-height:1.1;">
+        <strong style="font-size:1.1em;">${formatarHora(p.entrada)}</strong>
+      </div>
     </div>
-    <div class="meta"><strong>Nasc:</strong> ${p.nascimento || '-'} • <strong>Atend:</strong> ${p.atendimento || '-'}</div>
-    <div class="meta">${p.aguardando ? 'Aguardando: '+p.aguardando : ''} ${p.pendencias ? ' • Pendências: '+p.pendencias : ''}</div>
-    <div class="muted">Médico: ${p.medico || '-'} • Conduta: ${p.conduta || '-'} • Dieta: ${p.dieta || '-'}</div>
-    <div class="muted">Hosp: ${p.hospital || '-'} • Obs: ${p.observacao || '-'}</div>
+
+    <div style="display: flex; flex-direction: column; gap: 3px;">
+        ${escalasHTML}
+        
+        ${(p.aguardando || p.pendencias) ? `
+        <div style="background:rgba(0,0,0,0.15); padding:3px 5px; border-radius:3px; font-size:0.8em;">
+            ${p.aguardando ? 'Ag: <strong>' + p.aguardando + '</strong>' : ''}
+            ${(p.aguardando && p.pendencias) ? ' | ' : ''}
+            ${p.pendencias ? 'Pend: <strong>' + p.pendencias + '</strong>' : ''}
+        </div>` : ''}
+        
+        ${metasContent}
+
+        ${p.aguardando_vaga ? `
+        <div class="alerta-urgente">
+            ${iconeAlerta} ${p.aguardando_vaga}
+        </div>` : ''}
+    </div>
+
+    <div class="leito-footer">
+        <span>Dr: <strong>${v(p.medico)}</strong></span>
+        <span>Cond: <strong>${v(p.conduta)}</strong></span>
+        <span>Dieta: <strong>${v(p.dieta)}</strong></span>
+    </div>
   </div>`;
 }
 
+function calcularIdade(dataString) {
+    if(!dataString) return '';
+    const hoje = new Date();
+    const nasc = new Date(dataString);
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+    return idade;
+}
 
-let grafico = null;
+function formatarHora(dataString) {
+    if(!dataString) return '-';
+    const d = new Date(dataString);
+    return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
 
+function gerarPDF() {
+    const elemento = document.getElementById('conteudo-principal');
+    const cabecalhoPDF = document.getElementById('cabecalho-pdf');
+    cabecalhoPDF.style.display = 'block';
+    document.getElementById('data-pdf').innerText = new Date().toLocaleString('pt-BR');
+    const opt = { margin: 5, filename: 'mapa-leitos.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
+    html2pdf().set(opt).from(elemento).save().then(() => { cabecalhoPDF.style.display = 'none'; });
+}
+
+// ========================================================
+// INTELIGÊNCIA DO JAVASCRIPT PARA GERENCIAR AS COLUNAS
+// ========================================================
 async function carregar(){
-  try{
-    const r = await fetch(LIST_URL);
+ try{
+  const r = await fetch(LIST_URL);
     const j = await r.json();
     if(!j.success) return;
-    const dados = j.data;
-
-    const livres = dados.filter(p => p.status === 'livre').length;
-    const ocupados = dados.filter(p => p.status === 'ocupado').length;
-
-    document.getElementById('qtLivres').textContent = livres;
-    document.getElementById('qtOcupados').textContent = ocupados;
-
-    atualizarGrafico(livres, ocupados);
+    
+    let dados = j.data.filter(p => 
+        p.local !== 'Medicação' && 
+        p.local !== 'Decisão Clínica' && 
+        p.local !== 'Sala de Decisão' && 
+        p.local !== 'Emergência'
+    );
 
     const grupos = {};
-    dados.forEach(p=>{
-      if(!grupos[p.local]) grupos[p.local]=[];
-      grupos[p.local].push(p);
+    dados.forEach(p => {
+      const loc = p.local || 'Outros';
+      if(!grupos[loc]) grupos[loc] = [];
+      grupos[loc].push(p);
     });
 
+    // JUNÇÃO DO ISOLAMENTO
+    let isolamentosUnificados = [];
+    if(grupos["Isolamento Adulto"]) isolamentosUnificados.push(...grupos["Isolamento Adulto"]);
+    if(grupos["Isolamento Pediátrico"]) isolamentosUnificados.push(...grupos["Isolamento Pediátrico"]);
+    
+    if(isolamentosUnificados.length > 0) {
+        grupos["Isolamentos"] = isolamentosUnificados;
+    }
+    
+    delete grupos["Isolamento Adulto"];
+    delete grupos["Isolamento Pediátrico"];
+
     const container = document.getElementById('blocks');
-    container.innerHTML='';
+    container.innerHTML = ''; // Limpa a tela
 
-    const ordem = ["Observação Masculina","Observação Feminina","Observação Pediátrica","Isolamento Adulto","Isolamento Pediátrico"];
-    for(const local of ordem){
-      const lista = grupos[local] || [];
-      if(lista.length===0) continue;
-      lista.sort((a,b)=>parseInt(a.leito)-parseInt(b.leito));
-      const bloco=document.createElement('div');
-      bloco.className='block';
-      bloco.style.background = cores[local] || '#fff';
-      const titulo=document.createElement('h3');
-      titulo.textContent = local+` — ${lista.length} paciente(s)`;
-      bloco.appendChild(titulo);
-      lista.forEach(p=>bloco.insertAdjacentHTML('beforeend', montarCard(p)));
-      container.appendChild(bloco);
+    // CRIA AS 3 COLUNAS ESTRUTURAIS
+    const colMasc = document.createElement('div'); colMasc.className = 'coluna-container';
+    const colFem = document.createElement('div'); colFem.className = 'coluna-container';
+    const colPedIso = document.createElement('div'); colPedIso.className = 'coluna-container';
+
+    container.appendChild(colMasc);
+    container.appendChild(colFem);
+    container.appendChild(colPedIso);
+
+    // INJETA OS BLOCOS NAS COLUNAS
+    if(grupos["Observação Masculina"]) renderizarBloco("Observação Masculina", grupos["Observação Masculina"], colMasc);
+    if(grupos["Observação Feminina"]) renderizarBloco("Observação Feminina", grupos["Observação Feminina"], colFem);
+    
+    // Na terceira coluna, coloca a Pediátrica e depois o Isolamento
+    if(grupos["Observação Pediátrica"]) renderizarBloco("Observação Pediátrica", grupos["Observação Pediátrica"], colPedIso);
+    
+    let blocoIsolamentoHTML = null;
+    if(grupos["Isolamentos"]) {
+        blocoIsolamentoHTML = renderizarBlocoRetornandoElemento("Isolamentos", grupos["Isolamentos"], colPedIso);
     }
-  } catch(e){ console.error(e); }
+
+    // A MÁGICA: Verifica se a 3ª coluna estourou a altura da TV.
+    // Se estourar, cria uma 4ª coluna no final e joga o Isolamento para ela.
+    if (colPedIso.scrollHeight > colPedIso.clientHeight && blocoIsolamentoHTML) {
+        const colExtra = document.createElement('div');
+        colExtra.className = 'coluna-container';
+        container.appendChild(colExtra);
+        colExtra.appendChild(blocoIsolamentoHTML);
+    }
+
+  } catch(e){ console.error("Erro ao carregar dados:", e); }
 }
 
-/// Gráfico
-function atualizarGrafico(livres, ocupados) {
-  const ctx = document.getElementById('graficoLeitos').getContext('2d');
-  const total = livres + ocupados;
+function renderizarBloco(titulo, lista, container) {
+    if(!lista || lista.length === 0) return null;
+    lista.sort(ordenarLeito);
 
-  if (grafico) {
-    grafico.data.datasets[0].data = [livres, ocupados];
-    grafico.update();
-    return;
-  }
-
-  grafico = new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: ['Livres', 'Ocupados'],
-      datasets: [{
-        data: [livres, ocupados],
-        backgroundColor: ['#4ade80', '#ef4444']
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => `${ctx.label}: ${ctx.parsed} (${((ctx.parsed/total)*100).toFixed(1)}%)`
-          }
-        }
-      }
-    }
-  });
+    const bloco = document.createElement('div');
+    bloco.className = 'block';
+    bloco.setAttribute('data-setor', titulo); 
+    
+    const header = document.createElement('h3');
+    header.className = 'block-header';
+    let nomeExibicao = titulo === "Isolamentos" ? "Isolamento (Ad./Ped.)" : titulo;
+    header.textContent = `${nomeExibicao} (${lista.length})`;
+    
+    bloco.appendChild(header);
+    lista.forEach(p => bloco.insertAdjacentHTML('beforeend', montarCard(p)));
+    container.appendChild(bloco);
 }
 
+// Função auxiliar que retorna o HTML criado para podermos movê-lo de coluna se necessário
+function renderizarBlocoRetornandoElemento(titulo, lista, container) {
+    if(!lista || lista.length === 0) return null;
+    lista.sort(ordenarLeito);
+
+    const bloco = document.createElement('div');
+    bloco.className = 'block';
+    bloco.setAttribute('data-setor', titulo); 
+    
+    const header = document.createElement('h3');
+    header.className = 'block-header';
+    let nomeExibicao = titulo === "Isolamentos" ? "Isolamento (Ad./Ped.)" : titulo;
+    header.textContent = `${nomeExibicao} (${lista.length})`;
+    
+    bloco.appendChild(header);
+    lista.forEach(p => bloco.insertAdjacentHTML('beforeend', montarCard(p)));
+    container.appendChild(bloco);
+    
+    return bloco; // Retorna o elemento para controle via JS
+}
+
+function ordenarLeito(a, b) {
+    const numA = parseInt(a.leito) || 999;
+    const numB = parseInt(b.leito) || 999;
+    return numA - numB;
+}
+
+function atualizarRelogio(){
+  const agora = new Date();
+  document.getElementById('relogio').textContent = `UPA Santa Paula | ${agora.toLocaleDateString('pt-BR')} — ${agora.toLocaleTimeString('pt-BR', {hour12:false})}`;
+}
+
+initTheme();
 carregar();
 setInterval(carregar, UPDATE_INTERVAL);
-</script>
-
-<div id="relogio" class="relogio"></div>
-
-<script>
-function atualizarRelogio() {
-  const agora = new Date();
-  const data = agora.toLocaleDateString('pt-BR');
-  const hora = agora.toLocaleTimeString('pt-BR', {hour12: false});
-  document.getElementById('relogio').textContent = `${data} — ${hora}`;
-}
 setInterval(atualizarRelogio, 1000);
 atualizarRelogio();
 </script>
