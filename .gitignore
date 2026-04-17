@@ -1,7 +1,4 @@
-# Banco de Dados
+/
 pacientes.db
 
-# Pasta do Visual Studio
-.vs
-.idea
-
+/.idea

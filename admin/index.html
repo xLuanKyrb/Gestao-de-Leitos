@@ -2,286 +2,507 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<title>Cadastro e Controle</title>
+<title>Cadastro e Controle - UPA</title>
 <link rel="stylesheet" href="../style.css">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="../logo.png" type="image/svg+xml">
 <style>
-  .risk-label { font-size: 0.85em; font-weight: bold; margin-left: 5px; color: #555; }
-  .risk-low { color: green; }
-  .risk-med { color: orange; }
-  .risk-high { color: red; }
-  
-  .row-destaque { background-color: #fff3cd !important; border-left: 5px solid #ffc107; }
-  .row-livre { background-color: #f0f8ff !important; }
-  .row-crl-nao { background-color: #f8d7da !important; border-left: 5px solid #dc3545; } 
-  .row-alerta-conduta { background-color: #e9f5ff !important; border-left: 5px solid #007bff; }
+  /* ==========================================================
+     BASE & TIPOGRAFIA
+     ========================================================== */
+  :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-body: #f1f5f9;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --alert-bg: #fffbeb;
+      --alert-border: #f59e0b;
+      --danger: #ef4444;
+      --success: #22c55e;
+  }
 
-  .extra-checkbox-wrapper { display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
-  
-  fieldset { border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; background: #f9f9f9; }
-  legend { font-weight: bold; padding: 0 5px; color: #333; }
+  body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 0;
+      padding: 20px 0;
+  }
 
-  .table td { vertical-align: top; padding: 8px 5px; }
-  .table th { padding: 8px 5px; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
 
-  .meta-row {
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 8px;
-      border-radius: 4px;
+  /* ==========================================================
+     LAYOUT DO FORMULÁRIO
+     ========================================================== */
+  .card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      margin-bottom: 25px;
+      border: 1px solid #e2e8f0;
+  }
+
+  .section-title {
+      font-size: 1.1em;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 0;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+  }
+
+  .form-section {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+  }
+
+  .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+  }
+
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+  .span-full { grid-column: 1 / -1; }
+
+  /* ==========================================================
+     INPUTS E LABELS (Corrigido o Grid Blowout)
+     ========================================================== */
+  .input-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      position: relative;
+      gap: 6px;
+      min-width: 0; /* Previne overflow em Flex/Grid */
   }
-  .meta-header { display: flex; justify-content: space-between; align-items: center; }
-  .meta-options { display: flex; gap: 15px; font-size: 0.9em; margin-top: 5px; align-items: center;}
-  .meta-motivo { display: none; margin-top: 5px; }
-  .meta-motivo input { width: 100%; border: 1px solid #d69e9e; background-color: #fff5f5; }
-  .btn-remove-meta { 
-      background: none; border: none; color: red; font-weight: bold; cursor: pointer; font-size: 1.2em;
+
+  .input-group label {
+      font-size: 0.85em;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+  }
+
+  /* Aplica Box-Sizing e Width 100% para evitar que inputs quebrem a tela */
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-width: 0; /* Crucial para o Flexbox não esticar além do limite */
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95em;
+      color: var(--text-main);
+      background-color: #fff;
+      transition: all 0.2s;
+      font-family: inherit;
+  }
+
+  input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+
+  input:disabled, select:disabled {
+      background-color: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+  }
+
+  /* Checkbox Customizado */
+  .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      background: #fff;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+  }
+  .checkbox-wrapper input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+  .checkbox-wrapper label { cursor: pointer; font-size: 0.9em; font-weight: 600; color: var(--text-main); text-transform: none; letter-spacing: 0;}
+
+  /* Flex Side-by-Side Específico para Escalas (Glasgow / Dor) */
+  .flex-split {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+  }
+  .flex-split select { flex: 0 0 110px; } /* O select terá exatos 110px */
+  .flex-split input { flex: 1; }          /* O input ocupa o restante do espaço */
+
+  /* ==========================================================
+     ALERTAS E DESTAQUES
+     ========================================================== */
+  .alert-section {
+      background-color: var(--alert-bg);
+      border-left: 4px solid var(--alert-border);
+  }
+  .alert-section .section-title { color: #b45309; border-bottom-color: #fde68a; }
+
+  /* ==========================================================
+     BOTÕES
+     ========================================================== */
+  .btn-container { display: flex; gap: 12px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+  
+  button {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.95em;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
   }
   
-  .lista-metas-view { list-style: none; padding: 0; margin: 0; font-size: 0.85em; }
-  .lista-metas-view li { margin-bottom: 4px; border-bottom: 1px dashed #eee; padding-bottom: 2px; }
-  .tag-status { padding: 2px 4px; border-radius: 3px; font-weight: bold; font-size: 0.8em; }
-  .st-na { background: #eee; color: #555; }
-  .st-realizada { background: #d4edda; color: #155724; }
-  .st-nao { background: #f8d7da; color: #721c24; }
+  .btn-primary { background-color: var(--primary); color: white; }
+  .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+  
+  .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+  .btn-secondary:hover { background-color: #e2e8f0; }
 
-  /* === ESTILOS DE IMPRESSÃO (PDF) === */
+  /* ==========================================================
+     METAS MULTI
+     ========================================================== */
+  .meta-row {
+      background: #fff; border: 1px solid var(--border); padding: 12px; margin-bottom: 10px;
+      border-radius: 6px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .meta-header { display: flex; gap: 10px; }
+  .btn-remove-meta { background: #fee2e2; color: var(--danger); padding: 8px 12px; border-radius: 6px; font-weight: bold; }
+  .btn-remove-meta:hover { background: #fca5a5; }
+  
+  .meta-options { display: flex; gap: 20px; font-size: 0.9em; font-weight: 600; color: #475569;}
+  .meta-options label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  
+  .meta-motivo input { border-color: #fca5a5; background: #fef2f2; }
+
+  /* ==========================================================
+     TABELA DE PACIENTES
+     ========================================================== */
+  .table-wrapper { overflow-x: auto; }
+  .table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em; }
+  .table th { background-color: #f8fafc; padding: 12px 15px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+  .table td { padding: 12px 15px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  .table tr:hover { background-color: #f8fafc; }
+
+  .risk-label { font-size: 0.8em; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;}
+  .risk-low { background: #dcfce7; color: #166534; }
+  .risk-med { background: #fef08a; color: #854d0e; }
+  .risk-high { background: #fee2e2; color: #991b1b; }
+
+  /* Cores Linha Tabela */
+  .row-destaque td { background-color: #fffbeb; }
+  .row-livre td { background-color: #f1f5f9; color: #94a3b8; }
+  .row-crl-nao td { background-color: #fef2f2; } 
+  .row-alerta-conduta td { background-color: #eff6ff; }
+
+  /* ==========================================================
+     IMPRESSÃO
+     ========================================================== */
   @media print {
       @page { size: landscape; margin: 10mm; }
-      body { background: #fff; font-family: Arial, sans-serif; -webkit-print-color-adjust: exact; }
-      .header, #formPaciente, .secondary, .edit, .rem, #container_botoes_acao, button { display: none !important; }
-      .card { border: none; box-shadow: none; padding: 0; margin: 0; }
-      h3 { margin-top: 0; text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
-      .table { width: 100%; border-collapse: collapse; font-size: 11px; }
-      .table th, .table td { border: 1px solid #999; padding: 5px; color: #000; }
-      .table th { background-color: #eee !important; font-weight: bold; }
-      .row-crl-nao { background-color: #fdecea !important; }
-      .row-destaque { background-color: #fff8e1 !important; }
-      .table th:last-child, .table td:last-child { display: none; }
+      body { background: #fff; }
+      header, #formPaciente, .btn-container, .edit, .rem { display: none !important; }
+      .card { border: none; box-shadow: none; padding: 0; }
+      .table th { background-color: #eee !important; color: #000; }
+      .table td, .table th { border: 1px solid #ccc; }
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <header class="header">
-    <h1>Cadastro de Leitos</h1>
-    <div>
-        <a href="../index.html"><button class="secondary">Leitos</button></a>
-        <a href="../sala/index.html"><button class="secondary">Sala</button></a>
-        <a href="../relatorio/index.html"><button class="secondary">Relatório</button></a>
-        <button class="secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
+  <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1 style="color: var(--text-main); margin: 0;">Administração de Leitos</h1>
+    <div style="display: flex; gap: 10px;">
+        <a href="../index.html"><button class="btn-secondary">📺 Visão TV</button></a>
+        <a href="../sala/index.html"><button class="btn-secondary">🛏️ Visão Salas</button></a>
+        <a href="../relatorio/index.html"><button class="btn-secondary">📊 Relatório</button></a>
+        <button class="btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
     </div>
-    
   </header>
 
   <main class="card" id="formPaciente">
     <form>
       <input type="hidden" id="id_editando">
 
-      <div class="form-row">
-        <input type="text" id="nome" placeholder="Nome completo" required>
+      <div class="form-section">
+        <h4 class="section-title">👤 Dados de Identificação e Alocação</h4>
+        <div class="form-grid">
+            <div class="input-group span-2">
+                <label for="nome">Nome Completo do Paciente</label>
+                <input type="text" id="nome" placeholder="Ex: João da Silva" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="nascimento">Data de Nascimento</label>
+                <input type="date" id="nascimento" required>
+            </div>
 
-        <div style="display:flex; flex-direction:column; width: 120px;">
-          <input type="number" id="leito" placeholder="Nº Leito" min="0" max="999" required>
-          <div class="extra-checkbox-wrapper">
-            <input type="checkbox" id="leito_extra"> <label for="leito_extra">Leito extra</label>
-          </div>
+            <div class="input-group">
+                <label for="tipo_paciente">Classificação</label>
+                <select id="tipo_paciente" disabled>
+                    <option value="">Aguardando Data...</option>
+                    <option value="adulto">Adulto (>12 anos)</option>
+                    <option value="pediatrico">Pediatria (<=12 anos)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="atendimento">Nº Atendimento</label>
+                <input type="text" id="atendimento" placeholder="Registro do sistema" required>
+            </div>
+
+            <div class="input-group">
+                <label for="local">Setor / Local</label>
+                <select id="local" required>
+                    <option value="">Selecione o Setor</option>
+                    <option>Isolamento Adulto</option>
+                    <option>Isolamento Pediátrico</option>
+                    <option>Observação Masculina</option>
+                    <option>Observação Feminina</option>
+                    <option>Observação Pediátrica</option>
+                    <option>Sala de Decisão</option>
+                    <option>Medicação</option>
+                    <option>Emergência</option>
+                </select>
+            </div>
+
+            <div class="input-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="leito">Nº Leito</label>
+                    <input type="number" id="leito" placeholder="00" min="0" max="999" required>
+                </div>
+                <label class="checkbox-wrapper" style="margin-top: 23px;">
+                    <input type="checkbox" id="leito_extra"> 
+                    Leito Extra
+                </label>
+            </div>
         </div>
-
-        <select id="local" required>
-          <option value="">Selecione o Local</option>
-          <option>Isolamento Adulto</option>
-          <option>Isolamento Pediátrico</option>
-          <option>Observação Masculina</option>
-          <option>Observação Feminina</option>
-          <option>Observação Pediátrica</option>
-          <option>Sala de Decisão</option>
-          <option>Medicação</option>
-		  <option>Emergência</option>
-        </select>
-
-        <input type="date" id="nascimento" required title="Data de Nascimento">
-        
-        <select id="tipo_paciente" disabled style="background-color: #e9ecef;">
-          <option value="">Aguardando Data...</option>
-          <option value="adulto">Adulto (>12 anos)</option>
-          <option value="pediatrico">Pediatria (<=12 anos)</option>
-        </select>
-
-        <input type="text" id="atendimento" placeholder="Nº Atendimento" required>
-      </div>
-    
-        <div class="form-row" style="margin-top: 10px;">
-        <div style="width: 100%;">
-            <label style="font-size:0.8em; font-weight:bold; color:#333;">Observações Clínicas / Gerais:</label>
-            <textarea id="obs_clinica" rows="2" placeholder="Digite aqui observações adicionais sobre o quadro do paciente..." style="width:100%; resize: vertical; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit;"></textarea>
-        </div>
-      </div>
-      <div class="form-row" style="margin-top: 10px;">
-        <select id="aguardando">
-          <option value="">Status / Aguardando...</option>
-          <option>Exame</option>
-          <option>Alta</option>
-          <option>Transferência</option>
-          <option>Resultado</option>
-          <option>Nada</option>
-        </select>
-
-        <input type="text" id="pendencias" placeholder="Pendências (Rx, ECG, etc)">
-        <input type="text" id="medico" placeholder="Médico responsável">
-        
-        <select id="dieta">
-          <option value="">Dieta</option>
-          <option>Livre</option>
-          <option>Jejum</option>
-          <option>Hipossódica</option>
-          <option>Pastosa</option>
-          <option>Diabética</option>
-        </select>
       </div>
 
-      <div style="margin: 10px 0; border: 1px dashed #ffc107; padding: 10px; background: #fffdf5;">
-        <label style="font-weight:bold; font-size:0.9em; color:#d39e00;">⚠️ Local de Destaque (Obs / Inalação / Aguardando Vaga)</label>
-        <input type="text" id="aguardando_vaga" placeholder="Descreva aqui para destacar na tabela (ex: Aguardando vaga masc, Inalação...)" style="width:99%; margin-top:5px;">
-        
-        <select id="conduta" style="width:100%; margin-top:5px;">
-          <option value="">Conduta / Central de Leitos (Selecione)</option>
-          <option value="Sim">Sim (Conduta Realizada)</option>
-          <option value="Não">Não (Aguardando Conduta)</option>
-        </select>
+      <div class="form-section">
+        <h4 class="section-title">🩺 Quadro Clínico e Acompanhamento</h4>
+        <div class="form-grid">
+            <div class="input-group">
+                <label for="medico">Médico Responsável</label>
+                <input type="text" id="medico" placeholder="Dr(a). Nome">
+            </div>
 
-        <input type="text" id="hospital" placeholder="Hospital de aceite (se houver)" style="width:99%; margin-top:5px;">
+            <div class="input-group">
+                <label for="dieta">Dieta</label>
+                <select id="dieta">
+                    <option value="">Selecione...</option>
+                    <option>Livre</option>
+                    <option>Jejum</option>
+                    <option>Hipossódica</option>
+                    <option>Pastosa</option>
+                    <option>Diabética</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="aguardando">Status Geral</label>
+                <select id="aguardando">
+                    <option value="">Aguardando...</option>
+                    <option>Exame</option>
+                    <option>Alta</option>
+                    <option>Transferência</option>
+                    <option>Resultado</option>
+                    <option>Nada</option>
+                </select>
+            </div>
+
+            <div class="input-group span-2">
+                <label for="pendencias">Pendências (Rx, ECG, Laboratório, etc.)</label>
+                <input type="text" id="pendencias" placeholder="Descreva as pendências">
+            </div>
+
+            <div class="input-group span-full">
+                <label for="obs_clinica">Observações Clínicas Gerais</label>
+                <textarea id="obs_clinica" rows="2" placeholder="Digite observações sobre o quadro evolutivo do paciente..."></textarea>
+            </div>
+        </div>
       </div>
 
-      <hr>
+      <div class="form-section alert-section">
+        <h4 class="section-title">⚠️ Regulação, Vagas e Conduta</h4>
+        <div class="form-grid">
+            <div class="input-group">
+                <label for="conduta">Conduta / Central de Leitos</label>
+                <select id="conduta">
+                    <option value="">Selecione o status da conduta</option>
+                    <option value="Sim">Sim (Conduta Realizada)</option>
+                    <option value="Não">Não (Aguardando Conduta)</option>
+                </select>
+            </div>
 
-      <fieldset id="escala_adulto" style="display:none;">
-        <legend>Escalas Adulto (> 12 Anos)</legend>
-        <div class="form-row">
-          <div>
-            <select id="glasgow_tipo_adulto">
-                <option value="Glasgow">Glasgow</option>
-                <option value="RAS">RASS</option>
-            </select>
-            <input type="number" id="glasgow_valor_adulto" placeholder="Valor">
-          </div>
-          <div>
-            <input type="number" id="iris_adulto" placeholder="IRIS (Valor)" oninput="calcRisco('iris', this.value, 'lbl_iris_ad')">
-            <span id="lbl_iris_ad" class="risk-label"></span>
-          </div>
-          <div>
-            <input type="number" id="morse" placeholder="Morse (Valor)" oninput="calcRisco('morse', this.value, 'lbl_morse')">
-            <span id="lbl_morse" class="risk-label"></span>
-          </div>
-          <div>
-             <input type="number" id="braden_adulto" placeholder="Braden (Valor)" oninput="calcRisco('braden', this.value, 'lbl_braden_ad')">
-             <span id="lbl_braden_ad" class="risk-label"></span>
-          </div>
-        </div>
-        <div class="form-row" style="margin-top:10px;">
-          <div>
-            <select id="dor_tipo_adulto">
-                <option value="Dor">Dor (1-10)</option>
-                <option value="BPS">BPS</option>
-            </select>
-            <input type="number" id="dor_valor_adulto" placeholder="Valor">
-          </div>
-          <div>
-             <select id="news">
-               <option value="">NEWS (Selecione)</option>
-               <option value="Baixo">Baixo</option>
-               <option value="Moderado">Moderado</option>
-               <option value="Alto">Alto</option>
-             </select>
-          </div>
-          <div>
-            <input type="text" id="meows" placeholder="MEOWS (Opcional)">
-          </div>
-        </div>
-      </fieldset>
+            <div class="input-group span-2">
+                <label for="aguardando_vaga">Motivo de Destaque / Vaga</label>
+                <input type="text" id="aguardando_vaga" placeholder="Ex: Aguardando vaga de UTI, Em inalação...">
+            </div>
 
-      <fieldset id="escala_ped" style="display:none;">
-        <legend>Escalas Pediátricas (<= 12 Anos)</legend>
-        <div class="form-row">
-          <div>
-            <select id="glasgow_tipo_ped">
-                <option value="Glasgow">Glasgow</option>
-                <option value="RAS">RAS</option>
-            </select>
-            <input type="number" id="glasgow_valor_ped" placeholder="Valor">
-          </div>
-          <div>
-            <input type="number" id="iris_ped" placeholder="IRIS (Valor)" oninput="calcRisco('iris', this.value, 'lbl_iris_ped')">
-            <span id="lbl_iris_ped" class="risk-label"></span>
-          </div>
-          <div>
-             <input type="number" id="humpty" placeholder="Humpty D. (Valor)" oninput="calcRisco('humpty', this.value, 'lbl_humpty')">
-             <span id="lbl_humpty" class="risk-label"></span>
-          </div>
-          <div>
-             <input type="number" id="braden_ped" placeholder="Braden (Valor)" oninput="calcRisco('braden', this.value, 'lbl_braden_ped')">
-             <span id="lbl_braden_ped" class="risk-label"></span>
-          </div>
+            <div class="input-group span-full">
+                <label for="hospital">Hospital de Aceite (Se houver)</label>
+                <input type="text" id="hospital" placeholder="Nome do hospital de destino da transferência">
+            </div>
         </div>
-        <div class="form-row" style="margin-top:10px;">
-           <div>
-            <select id="dor_tipo_ped">
-                <option value="Dor">Dor (1-10)</option>
-                <option value="BPS">BPS</option>
-                <option value="FLACC">FLACC</option>
-            </select>
-            <input type="number" id="dor_valor_ped" placeholder="Valor">
-          </div>
-          <div>
-            <input type="number" id="pews" placeholder="PEWS (Valor)">
-          </div>
+      </div>
+
+      <div id="escala_adulto" class="form-section" style="display:none;">
+        <h4 class="section-title">📊 Escalas de Risco: Adulto</h4>
+        <div class="form-grid">
+            <div class="input-group">
+                <label>Nível de Consciência</label>
+                <div class="flex-split">
+                    <select id="glasgow_tipo_adulto"><option>Glasgow</option><option value="RAS">RASS</option></select>
+                    <input type="number" id="glasgow_valor_adulto" placeholder="Valor">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Escala IRIS</label>
+                <input type="number" id="iris_adulto" placeholder="Valor" oninput="calcRisco('iris', this.value, 'lbl_iris_ad')">
+                <span id="lbl_iris_ad" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Queda (Morse)</label>
+                <input type="number" id="morse" placeholder="Valor" oninput="calcRisco('morse', this.value, 'lbl_morse')">
+                <span id="lbl_morse" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Lesão (Braden)</label>
+                <input type="number" id="braden_adulto" placeholder="Valor" oninput="calcRisco('braden', this.value, 'lbl_braden_ad')">
+                <span id="lbl_braden_ad" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Avaliação de Dor</label>
+                <div class="flex-split">
+                    <select id="dor_tipo_adulto"><option>Dor (1-10)</option><option>BPS</option></select>
+                    <input type="number" id="dor_valor_adulto" placeholder="Valor">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Deterioração (NEWS)</label>
+                <select id="news">
+                    <option value="">Selecione...</option>
+                    <option value="Baixo">Baixo</option>
+                    <option value="Moderado">Moderado</option>
+                    <option value="Alto">Alto</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Gestante (MEOWS)</label>
+                <input type="text" id="meows" placeholder="Valor (Opcional)">
+            </div>
         </div>
-      </fieldset>
-      
-      <fieldset>
-        <legend>Metas da Visita Multi</legend>
+      </div>
+
+      <div id="escala_ped" class="form-section" style="display:none;">
+        <h4 class="section-title">🧸 Escalas de Risco: Pediátrica</h4>
+        <div class="form-grid">
+             <div class="input-group">
+                <label>Nível de Consciência</label>
+                <div class="flex-split">
+                    <select id="glasgow_tipo_ped"><option>Glasgow</option><option>RAS</option></select>
+                    <input type="number" id="glasgow_valor_ped" placeholder="Valor">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Escala IRIS</label>
+                <input type="number" id="iris_ped" placeholder="Valor" oninput="calcRisco('iris', this.value, 'lbl_iris_ped')">
+                <span id="lbl_iris_ped" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Queda (Humpty D.)</label>
+                <input type="number" id="humpty" placeholder="Valor" oninput="calcRisco('humpty', this.value, 'lbl_humpty')">
+                <span id="lbl_humpty" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Lesão (Braden Q)</label>
+                <input type="number" id="braden_ped" placeholder="Valor" oninput="calcRisco('braden', this.value, 'lbl_braden_ped')">
+                <span id="lbl_braden_ped" class="risk-label" style="display:none;"></span>
+            </div>
+
+            <div class="input-group">
+                <label>Avaliação de Dor</label>
+                <div class="flex-split">
+                    <select id="dor_tipo_ped"><option>Dor (1-10)</option><option>BPS</option><option>FLACC</option></select>
+                    <input type="number" id="dor_valor_ped" placeholder="Valor">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Deterioração (PEWS)</label>
+                <input type="number" id="pews" placeholder="Valor">
+            </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h4 class="section-title">📋 Metas da Visita Multidisciplinar</h4>
         <div id="container_metas"></div>
-        <button type="button" class="secondary" onclick="adicionarMeta()" style="margin-top:10px; font-size:0.9em;">+ Adicionar Meta</button>
-      </fieldset>
+        <button type="button" class="btn-secondary" onclick="adicionarMeta()" style="margin-top:10px;">+ Nova Meta</button>
+      </div>
 
-      <div id="container_botoes_acao" style="display:flex; gap:8px; margin-top:20px;">
-        <button type="submit" id="btnSalvar">Salvar Paciente</button>
-        <button type="button" id="limpar" class="secondary" onclick="limparForm()">Limpar / Novo</button>
+      <div class="btn-container">
+        <button type="submit" id="btnSalvar" class="btn-primary">💾 Salvar Dados do Paciente</button>
+        <button type="button" id="limpar" class="btn-secondary" onclick="limparForm()">🔄 Limpar / Novo Form</button>
       </div>
     </form>
   </main>
 
   <section class="card">
-    <h3>Pacientes Cadastrados</h3>
-    <table class="table" id="tabela">
-      <thead>
-        <tr>
-          <th>Leito/Loc</th>
-          <th>Nome</th>
-          <th>Idade</th> 
-          <th>Riscos Principais</th>
-          <th>Metas visita | Obs. geral</th>
-          <th>Entrada</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <h3 class="section-title" style="margin-bottom: 20px;">Listagem Geral de Leitos</h3>
+    <div class="table-wrapper">
+        <table class="table" id="tabela">
+        <thead>
+            <tr>
+            <th>Local / Leito</th>
+            <th>Paciente</th>
+            <th>Idade</th> 
+            <th>Riscos</th>
+            <th>Metas e Observações</th>
+            <th>Tempo Perm.</th>
+            <th>Ações Rápidas</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        </table>
+    </div>
   </section>
 </div>
 
 <script>
-
 const API_BASE = '../api.php';
 let listaPacientes = [];
 
-// --- Lógica das Metas Multi ---
 function adicionarMeta(dados = {}) {
     const container = document.getElementById('container_metas');
     const idUnico = 'meta_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -293,16 +514,16 @@ function adicionarMeta(dados = {}) {
     div.className = 'meta-row';
     div.innerHTML = `
         <div class="meta-header">
-            <input type="text" class="meta-texto" placeholder="Descrição da Meta" value="${texto}" style="flex:1; margin-right:10px;" required>
-            <button type="button" class="btn-remove-meta" onclick="this.parentElement.parentElement.remove()">×</button>
+            <input type="text" class="meta-texto" placeholder="Descreva a meta clínica..." value="${texto}" required>
+            <button type="button" class="btn-remove-meta" onclick="this.parentElement.parentElement.remove()" title="Remover Meta">✕</button>
         </div>
         <div class="meta-options">
-            <label><input type="radio" name="${idUnico}" value="NA" ${status === 'NA' ? 'checked' : ''} onchange="toggleMotivo(this)"> NA</label>
-            <label><input type="radio" name="${idUnico}" value="Realizada" ${status === 'Realizada' ? 'checked' : ''} onchange="toggleMotivo(this)"> Realizada</label>
-            <label><input type="radio" name="${idUnico}" value="NaoRealizada" ${status === 'NaoRealizada' ? 'checked' : ''} onchange="toggleMotivo(this)"> Não realizada</label>
+            <label><input type="radio" name="${idUnico}" value="NA" ${status === 'NA' ? 'checked' : ''} onchange="toggleMotivo(this)"> Não se Aplica (NA)</label>
+            <label><input type="radio" name="${idUnico}" value="Realizada" ${status === 'Realizada' ? 'checked' : ''} onchange="toggleMotivo(this)"> ✅ Realizada</label>
+            <label><input type="radio" name="${idUnico}" value="NaoRealizada" ${status === 'NaoRealizada' ? 'checked' : ''} onchange="toggleMotivo(this)"> ❌ Não Realizada</label>
         </div>
-        <div class="meta-motivo" style="display: ${status === 'NaoRealizada' ? 'block' : 'none'};">
-            <input type="text" class="meta-motivo-input" placeholder="Motivo da não realização" value="${motivo}">
+        <div class="meta-motivo" style="display: ${status === 'NaoRealizada' ? 'block' : 'none'}; margin-top: 8px;">
+            <input type="text" class="meta-motivo-input" placeholder="Justificativa da não realização..." value="${motivo}">
         </div>
     `;
     container.appendChild(div);
@@ -336,7 +557,6 @@ function obterMetasJSON() {
     return JSON.stringify(metas);
 }
 
-// --- Funções Auxiliares / Gerais ---
 function limparForm() {
     document.getElementById('id_editando').value = '';
     document.getElementById('nome').value = '';
@@ -358,14 +578,11 @@ function limparForm() {
     document.getElementById('conduta').value = '';
     document.getElementById('hospital').value = '';
 
-    // Limpa escalas
-    document.querySelectorAll('#escala_adulto input, #escala_ped input').forEach(i => i.value = '');
-    document.querySelectorAll('.risk-label').forEach(s => s.textContent = '');
+    document.querySelectorAll('#escala_adulto input, #escala_ped input, #escala_adulto select, #escala_ped select').forEach(i => i.value = '');
+    document.querySelectorAll('.risk-label').forEach(s => { s.textContent = ''; s.style.display = 'none'; });
 
-    // Limpa Metas
     document.getElementById('container_metas').innerHTML = '';
     
-    // Reseta displays
     document.getElementById('escala_adulto').style.display = 'none';
     document.getElementById('escala_ped').style.display = 'none';
 }
@@ -373,7 +590,7 @@ function limparForm() {
 function calcRisco(escala, val, labelId) {
     const lbl = document.getElementById(labelId);
     if(!lbl || val === "" || isNaN(parseFloat(val))) { 
-        if(lbl) lbl.innerHTML = ""; 
+        if(lbl) lbl.style.display = 'none'; 
         return; 
     }
     val = parseFloat(val);
@@ -399,6 +616,8 @@ function calcRisco(escala, val, labelId) {
         else if(val >= 10) { texto = "Alto"; classe = "risk-high"; }
         else { texto = "Muito Alto"; classe = "risk-high"; }
     }
+    
+    lbl.style.display = 'inline-block';
     lbl.innerHTML = texto;
     lbl.className = "risk-label " + classe;
 }
@@ -419,9 +638,8 @@ const calcularTipoPaciente = () => {
   const hoje = new Date();
   let idade = hoje.getFullYear() - nasc.getFullYear();
   const m = hoje.getMonth() - nasc.getMonth();
-  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
-      idade--;
-  }
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) { idade--; }
+  
   const tipo = idade <= 12 ? "pediatrico" : "adulto";
   tipoPaciente.value = tipo;
   escalaAdulto.style.display = tipo === "adulto" ? "block" : "none";
@@ -441,7 +659,7 @@ function formatDate(dt) {
     const dataHora = new Date(dt);
     const dataFormatada = dataHora.toLocaleDateString('pt-BR');
     const horaFormatada = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    return `${dataFormatada} ${horaFormatada}`; 
+    return `${dataFormatada}<br><span style="color:#64748b; font-size:0.9em">${horaFormatada}</span>`; 
 }
 
 async function carregarTabela() {
@@ -464,14 +682,13 @@ async function carregarTabela() {
             let infoMetas = "";
             let dataEntrada = "";
             let idade = "";
-            
             let permanencia = ""; 
 
             if (estaLivre) {
                 classeLinha = "row-livre";
-                nomeExibicao = "<span style='color:#999; font-style:italic;'>-- Disponível --</span>";
-                infoMetas = "<small style='color:#28a745'>Vago</small>";
-                acoesHTML = `<button class="secondary" onclick="preencherNovo('${p.leito}', '${p.local}')">➕ Ocupar</button>`;
+                nomeExibicao = "<span style='font-style:italic;'>-- Disponível --</span>";
+                infoMetas = "-";
+                acoesHTML = `<button class="btn-primary" style="padding: 6px 12px; font-size:0.85em;" onclick="preencherNovo('${p.leito}', '${p.local}')">➕ Ocupar Leito</button>`;
                 idade = '--'; dataEntrada = '--';
             } else {
                 const pendenciasTexto = (p.pendencias || '').toLowerCase();
@@ -479,68 +696,50 @@ async function carregarTabela() {
                 const condutaNao = (p.conduta || '').toLowerCase() === 'não';
                 const isCrlNao = (condutaNao && (aguardandoVagaTexto.includes('crl') || aguardandoVagaTexto.includes('vaga')));
                 
-                nomeExibicao = `<strong>${p.nome}</strong>`;
+                nomeExibicao = `<strong style="color:var(--text-main); font-size: 1.05em;">${p.nome}</strong><br><span style="font-size:0.85em; color:var(--text-muted);">Atend: ${p.atendimento || '--'}</span>`;
                 
-                // Parse Metas
                 try {
                     const metasObj = JSON.parse(p.observacao || '[]');
                     if (Array.isArray(metasObj) && metasObj.length > 0) {
-                        infoMetas = '<ul class="lista-metas-view">';
+                        infoMetas = '<ul style="margin:0; padding-left:20px; font-size:0.9em;">';
                         metasObj.forEach(m => {
-                            let badge = '';
-                            if(m.status === 'Realizada') badge = '<span class="tag-status st-realizada">OK</span>';
-                            else if(m.status === 'NaoRealizada') badge = '<span class="tag-status st-nao">Ñ/R</span>';
-                            else badge = '<span class="tag-status st-na">NA</span>';
-                            let motivoTxt = (m.status === 'NaoRealizada' && m.motivo) ? `<br><em style="color:#a00; font-size:0.9em;">Obs: ${m.motivo}</em>` : '';
-                            infoMetas += `<li>${badge} ${m.texto} ${motivoTxt}</li>`;
+                            let icone = m.status === 'Realizada' ? '✅' : (m.status === 'NaoRealizada' ? '❌' : '➖');
+                            let motivoTxt = (m.status === 'NaoRealizada' && m.motivo) ? ` <em>(${m.motivo})</em>` : '';
+                            infoMetas += `<li>${icone} ${m.texto}${motivoTxt}</li>`;
                         });
                         infoMetas += '</ul>';
                     } else if (p.observacao && p.observacao.trim() !== "" && !p.observacao.startsWith('[')) {
                         infoMetas = p.observacao;
                     } else {
-                        infoMetas = '<span style="color:#999">Sem metas</span>';
+                        infoMetas = '<span style="color:#94a3b8; font-size:0.9em;">Nenhuma meta registrada</span>';
                     }
                 } catch(e) { infoMetas = p.observacao || ''; }
                 
-                // Exibe também a OBS Clínica se houver
                 if(p.obs_clinica) {
-                    infoMetas += `<div style="margin-top:5px; border-top:1px dashed #ccc; padding-top:3px; font-size:0.85em; color:#444;"><strong>Obs. Geral:</strong> ${p.obs_clinica}</div>`;
+                    infoMetas += `<div style="margin-top:8px; border-top:1px dashed #cbd5e1; padding-top:6px; font-size:0.9em; color:#475569;"><strong>Obs. Clínica:</strong> ${p.obs_clinica}</div>`;
                 }
 
                 if (isCrlNao) {
                     classeLinha = "row-crl-nao"; 
-                    nomeExibicao = `<span style="color:#dc3545; font-weight:bold;">⚠️ ${p.nome}</span>`;
-                    infoMetas = `<strong style="color:#dc3545;">AGUARDANDO VAGA/CRL</strong><br>` + infoMetas;
+                    infoMetas = `<strong style="color:#dc3545; font-size:0.9em; display:block; margin-bottom:5px;">⚠️ AGUARDANDO VAGA / CRL</strong>` + infoMetas;
                 } else if (p.aguardando_vaga && p.aguardando_vaga.trim() !== "") {
                     classeLinha = "row-destaque"; 
-                    infoMetas = `<strong style="color:#d39e00">⚠️ ${p.aguardando_vaga}</strong><br>` + infoMetas;
+                    infoMetas = `<strong style="color:#b45309; font-size:0.9em; display:block; margin-bottom:5px;">⚠️ ALERTA: ${p.aguardando_vaga}</strong>` + infoMetas;
                 } else if (condutaNao) {
                     classeLinha = "row-alerta-conduta"; 
-                    infoMetas = `<strong style="color:#007bff;">⚠️ CONDUTA PENDENTE</strong><br>` + infoMetas;
+                    infoMetas = `<strong style="color:#2563eb; font-size:0.9em; display:block; margin-bottom:5px;">ℹ️ CONDUTA PENDENTE</strong>` + infoMetas;
                 }
 
                 idade = calcIdade(p.nascimento) + " anos";
                 
-                // === CÁLCULO DE PERMANÊNCIA ===
                 if (p.entrada) {
                     dataEntrada = formatDate(p.entrada);
-                    const entDate = new Date(p.entrada);
-                    const now = new Date();
-                    const diffMs = now - entDate;
-                    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffHrs = Math.floor((new Date() - new Date(p.entrada)) / (1000 * 60 * 60));
                     const diffDias = Math.floor(diffHrs / 24);
-                    
-                    let tempoStr = "";
-                    if (diffDias > 0) tempoStr = `${diffDias}d ${diffHrs % 24}h`;
-                    else tempoStr = `${diffHrs}h`;
-                    
-                    permanencia = `<br><span style="font-size:0.75em; color:#0056b3; font-weight:bold;">Perm: ${tempoStr}</span>`;
-                } else {
-                    dataEntrada = "--";
-                }
+                    let tempoStr = diffDias > 0 ? `${diffDias}d ${diffHrs % 24}h` : `${diffHrs}h`;
+                    permanencia = `<br><span style="font-size:0.85em; color:var(--primary); font-weight:700; background:#eff6ff; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">${tempoStr}</span>`;
+                } else { dataEntrada = "--"; }
                 
-                if(p.diagnostico) nomeExibicao += `<div style='font-size:0.85em; color:#666; margin-top:2px;'>${p.diagnostico}</div>`;
-
                 let riscos = [];
                 if(p.tipo_paciente === 'adulto') {
                     if (p.news) riscos.push(`NEWS: <strong>${p.news}</strong>`);
@@ -551,23 +750,27 @@ async function carregarTabela() {
                     if (p.humpty) riscos.push(`Humpty: <strong>${p.humpty}</strong>`);
                     if (p.braden_ped) riscos.push(`Braden: <strong>${p.braden_ped}</strong>`);
                 }
-                infoRiscos = riscos.length > 0 ? riscos.join(' | ') : '--';
+                infoRiscos = riscos.length > 0 ? riscos.join('<br>') : '<span style="color:#94a3b8">--</span>';
 
                 acoesHTML = `
-                    <button class="edit" onclick="editar(${p.id})">✏️ Editar</button>
-                    <button class="rem" onclick="deletar(${p.id})">🚪 Alta</button>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <button class="btn-secondary" style="padding:6px 10px; font-size:0.85em;" onclick="editar(${p.id})">✏️ Editar</button>
+                        <button class="btn-secondary" style="padding:6px 10px; font-size:0.85em; color:var(--danger); border-color:#fca5a5;" onclick="deletar(${p.id})">🚪 Dar Alta</button>
+                    </div>
                 `;
             }
 
             tr.className = classeLinha;
+            let labelExtra = p.leito.includes(" (Extra)") ? '<br><span style="background:#fee2e2; color:#991b1b; padding:2px 4px; border-radius:4px; font-size:0.75em; font-weight:bold;">EXTRA</span>' : '';
+            
             tr.innerHTML = `
                 <td>
-                    <strong style="font-size:1.1em">${p.leito}</strong>${p.leito.includes(" (Extra)") ? '<br><small style="color:red; font-weight:bold;">EXTRA</small>' : ''}<br>
-                    <span style="font-size:0.8em; color:#555;">${p.local}</span>
+                    <strong style="font-size:1.15em; color:var(--text-main);">${p.leito.replace(" (Extra)", "")}</strong>${labelExtra}<br>
+                    <span style="font-size:0.85em; color:var(--text-muted);">${p.local}</span>
                 </td>
                 <td>${nomeExibicao}</td>
                 <td>${idade}</td>
-                <td><small>${infoRiscos}</small></td>
+                <td><div style="font-size:0.9em; line-height:1.4;">${infoRiscos}</div></td>
                 <td>${infoMetas}</td>
                 <td>${dataEntrada}${permanencia}</td>
                 <td>${acoesHTML}</td>
@@ -590,27 +793,14 @@ function preencherNovo(leitoNum, localNome) {
     setTimeout(() => document.getElementById('nome').focus(), 500);
 }
 
-// Função para dar Alta (Deletar Lógico)
 async function deletar(id) {
-    if (confirm('Confirmar ALTA e arquivamento deste paciente? (Os dados serão salvos no relatório).')) {
+    if (confirm('Confirmar ALTA e arquivamento deste paciente? (Os dados continuarão salvos no relatório).')) {
         try {
-            const resp = await fetch(`${API_BASE}?action=delete`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: id })
-            });
-            
+            const resp = await fetch(`${API_BASE}?action=delete`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: id }) });
             const json = await resp.json();
-            
-            if (json.success) {
-                carregarTabela();
-            } else {
-                alert("Erro ao realizar alta: " + (json.message || "Erro desconhecido"));
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Erro de conexão ao tentar realizar alta.");
-        }
+            if (json.success) carregarTabela();
+            else alert("Erro ao realizar alta: " + (json.message || ""));
+        } catch (e) { alert("Erro de conexão ao tentar realizar alta."); }
     }
 }
 
@@ -635,10 +825,7 @@ formPaciente.onsubmit = async (ev) => {
     nascimento: document.getElementById('nascimento').value,
     tipo_paciente: document.getElementById('tipo_paciente').value,
     atendimento: document.getElementById('atendimento').value,
-    
-    // Novo Campo enviado aqui:
     obs_clinica: document.getElementById('obs_clinica').value,
-
     aguardando: document.getElementById('aguardando').value,
     pendencias: document.getElementById('pendencias').value,
     medico: document.getElementById('medico').value,
@@ -663,25 +850,19 @@ formPaciente.onsubmit = async (ev) => {
   };
 
   try {
-      const resp = await fetch(`${API_BASE}?action=${action}`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
-      });
+      const resp = await fetch(`${API_BASE}?action=${action}`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
       const j = await resp.json();
       if (!j.success) return alert("Erro ao salvar! " + (j.message || ""));
       limparForm();
       carregarTabela();
-  } catch (err) {
-      alert("Erro de comunicação com o servidor.");
-  }
+  } catch (err) { alert("Erro de comunicação com o servidor."); }
 };
 
 function editar(id) {
     const p = listaPacientes.find(pac => pac.id == id);
     if (!p) return alert("Erro ao encontrar dados do paciente.");
 
-    limparForm(); // Garante formulário limpo antes de preencher
+    limparForm(); 
     document.getElementById('id_editando').value = p.id;
     document.getElementById('nome').value = p.nome;
     
@@ -698,35 +879,26 @@ function editar(id) {
       calcularTipoPaciente();
     }
     document.getElementById('atendimento').value = p.atendimento;
-
-    // Preenche o novo campo de Observação
     document.getElementById('obs_clinica').value = p.obs_clinica || '';
-
     document.getElementById('aguardando').value = p.aguardando;
     document.getElementById('pendencias').value = p.pendencias;
     document.getElementById('medico').value = p.medico;
     document.getElementById('dieta').value = p.dieta;
     
-    // Metas
     if(p.observacao) {
         try {
             const metas = JSON.parse(p.observacao);
             if(Array.isArray(metas)) {
                 document.getElementById('container_metas').innerHTML = '';
                 metas.forEach(m => adicionarMeta(m));
-            } else {
-                adicionarMeta({texto: p.observacao}); 
-            }
+            } else { adicionarMeta({texto: p.observacao}); }
         } catch(e) { adicionarMeta({texto: p.observacao}); }
-    } else {
-        adicionarMeta();
-    }
+    } else { adicionarMeta(); }
 
     document.getElementById('hospital').value = p.hospital;
     document.getElementById('aguardando_vaga').value = p.aguardando_vaga;
     document.getElementById('conduta').value = p.conduta;
     
-    // Escalas (Lógica de preenchimento)
     const parseScale = (val) => val && val.includes(":") ? val.split(":").map(s => s.trim()) : ['', ''];
     if(p.tipo_paciente === 'adulto') {
         let [gType, gVal] = parseScale(p.glasgow_adulto);
@@ -762,9 +934,7 @@ function editar(id) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Inicializa
 carregarTabela();
-
 </script>
 </body>
 </html>
