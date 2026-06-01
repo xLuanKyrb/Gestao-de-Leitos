@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório - UPA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="icon" href="../logo.png" type="image/svg+xml">
+    <style>
+        :root { --primary: #0056b3; --light: #f8f9fa; --border: #dee2e6; }
+        body { font-family: 'Roboto', sans-serif; background: #eef2f5; margin: 0; padding: 20px; color: #333; }
+        
+        .header { background: #fff; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; }
+        .header h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
+        .btn-nav { background: var(--light); border: 1px solid #ddd; padding: 8px 15px; border-radius: 5px; text-decoration: none; color: #555; cursor: pointer; }
+        .btn-nav:hover { background: #e2e6ea; }
+
+        /* Estilo dos Filtros */
+        .filtros-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .filtros-section-title { font-size: 0.9rem; font-weight: bold; color: #555; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 15px; margin-top: 15px; }
+        
+        .grid-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        
+        .form-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; color: #666; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.85rem; box-sizing: border-box; }
+        
+        .btn-filtrar { background: var(--primary); color: #fff; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; transition: 0.3s; }
+        .btn-filtrar:hover { background: #004494; }
+
+        /* KPIs */
+        .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .kpi-card { background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .kpi-value { font-size: 1.8rem; font-weight: bold; display: block; margin-top: 5px; }
+
+        /* Tabela */
+        .table-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 0.85rem; }
+        th { background: #f1f3f5; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; }
+        td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+        
+        /* Utilitários */
+        .badge { padding: 3px 6px; border-radius: 4px; color: #fff; font-size: 0.75rem; display: inline-block; }
+        .bg-success { background: #28a745; } 
+        .bg-warning { background: #ffc107; color: #333; }
+        
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+
+    <div class="header no-print">
+        <h1>📊 Relatório Histórico / Alta</h1>
+        
+        <div>
+            <a href="../admin/" class="btn-nav">Administração</a>
+            <a href="../index.html" class="btn-nav">Mapa de Leitos</a>
+            <a href="../sala/index.html" class="btn-nav">Mapa de Sala</a>
+        </div>
+    </div>
+
+    <div class="filtros-card no-print">
+        
+        <div class="grid-filtros">
+            <div class="form-group">
+                <label>Data Início</label>
+                <input type="date" id="inicio" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Data Fim</label>
+                <input type="date" id="fim" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Setor</label>
+                <select id="setor" class="form-control">
+                    <option value="">Todos</option>
+                    <option>Isolamento Adulto</option>
+                    <option>Isolamento Pediátrico</option>
+                    <option>Observação Masculina</option>
+                    <option>Observação Feminina</option>
+                    <option>Observação Pediátrica</option>
+                    <option>Sala de Decisão</option>
+                    <option>Medicação</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tipo Paciente</label>
+                <select id="filtro_tipo" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="adulto">Adulto</option>
+                    <option value="pediatrico">Pediátrico</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filtros-section-title">Busca Específica (Texto)</div>
+        <div class="grid-filtros">
+            <div class="form-group">
+                <label>Nome do Paciente</label>
+                <input type="text" id="filtro_nome" class="form-control" placeholder="Parte do nome...">
+            </div>
+            <div class="form-group">
+                <label>Médico</label>
+                <input type="text" id="filtro_medico" class="form-control" placeholder="Nome do médico...">
+            </div>
+            <div class="form-group">
+                <label>Diagnóstico / CID</label>
+                <input type="text" id="filtro_cid" class="form-control" placeholder="Ex: A01, Dengue...">
+            </div>
+            <div class="form-group">
+                <label>Hospital Destino</label>
+                <input type="text" id="filtro_hospital" class="form-control" placeholder="Ex: Santa Casa...">
+            </div>
+        </div>
+
+        <div class="filtros-section-title">Filtros de Risco / Escalas</div>
+        <div class="grid-filtros" style="background: #fdfdfd; padding: 10px; border: 1px dashed #ccc;">
+            <div class="form-group">
+                <label title="Busca valores maiores ou iguais">NEWS (≥)</label>
+                <input type="number" id="filtro_news" class="form-control" placeholder="Mínimo">
+            </div>
+            <div class="form-group">
+                <label title="Busca valores maiores ou iguais">PEWS (≥)</label>
+                <input type="number" id="filtro_pews" class="form-control" placeholder="Mínimo">
+            </div>
+            <div class="form-group">
+                <label title="Busca valores MENORES ou iguais (Risco alto é nota baixa)">Braden (≤)</label>
+                <input type="number" id="filtro_braden" class="form-control" placeholder="Máximo">
+            </div>
+            <div class="form-group">
+                <label title="Busca valores maiores ou iguais">Morse (≥)</label>
+                <input type="number" id="filtro_morse" class="form-control" placeholder="Mínimo">
+            </div>
+            <div class="form-group">
+                <label title="Busca valores maiores ou iguais">Humpty D. (≥)</label>
+                <input type="number" id="filtro_humpty" class="form-control" placeholder="Mínimo">
+            </div>
+        </div>
+
+        <button onclick="carregarDados()" class="btn-filtrar">🔍 APLICAR FILTROS</button>
+    </div>
+
+    <div class="kpi-container">
+        <div class="kpi-card" style="border-left-color: #007bff;">
+            <small>Total Listado</small>
+            <span class="kpi-value" id="kpi-total">0</span>
+        </div>
+        <div class="kpi-card" style="border-left-color: #28a745;">
+            <small>Altas / Transferências</small>
+            <span class="kpi-value" id="kpi-saidas">0</span>
+        </div>
+        <div class="kpi-card" style="border-left-color: #dc3545;">
+            <small>Pacientes c/ Risco</small>
+            <span class="kpi-value" id="kpi-risco">0</span>
+        </div>
+        <div class="kpi-card" style="border-left-color: #ffc107;">
+            <small>Permanência Média (Altas)</small>
+            <span class="kpi-value" id="kpi-tempo">0h</span>
+        </div>
+    </div>
+
+    <div class="table-container" id="report-content">
+        <div class="no-print" style="margin-bottom: 15px; text-align: right;">
+            <button onclick="exportExcel()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Baixar Excel</button>
+            <button onclick="exportPDF()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Baixar PDF</button>
+        </div>
+        
+        <table id="tabela-dados">
+            <thead>
+                <tr>
+                    <th>Paciente / Atend.</th>
+                    <th>Setor / Leito</th>
+                    <th>Entrada</th>
+                    <th>Saída</th>
+                    <th>Tempo Perm.</th>
+                    <th>CID / Médico / Hospital</th>
+                    <th>Escalas / Obs</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-dados"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = '../api.php';
+        let dadosBrutos = []; 
+        let dadosFiltrados = []; 
+
+        window.onload = () => {
+            const hoje = new Date();
+            const mesPassado = new Date();
+            mesPassado.setDate(hoje.getDate() - 30);
+            
+            document.getElementById('fim').valueAsDate = hoje;
+            document.getElementById('inicio').valueAsDate = mesPassado;
+            
+            carregarDados();
+        };
+
+        async function carregarDados() {
+            const inicio = document.getElementById('inicio').value;
+            const fim = document.getElementById('fim').value;
+            const tbody = document.getElementById('tbody-dados');
+            
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px;">Carregando histórico...</td></tr>';
+
+            try {
+                // Chama a API corrigida que busca por data de entrada OU saida
+                const url = `${API_URL}?action=rotatividade&inicio=${inicio}&fim=${fim}`;
+                const resp = await fetch(url);
+                const json = await resp.json();
+
+                if(!json.success) {
+                    // Se não for sucesso mas tiver data (pode ser array direto em algumas implementações de API simples)
+                    if(Array.isArray(json)) dadosBrutos = json;
+                    else if(json.data) dadosBrutos = json.data;
+                    else throw new Error(json.message || "Formato de dados inválido");
+                } else {
+                    dadosBrutos = json.data;
+                }
+                
+                aplicarFiltrosLocais();
+
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center">Erro ao carregar: ${error.message}</td></tr>`;
+            }
+        }
+
+        function aplicarFiltrosLocais() {
+            // Helpers
+            const val = (id) => document.getElementById(id).value;
+            const valLower = (id) => val(id).toLowerCase();
+            const num = (id) => { const v = val(id); return v ? parseFloat(v) : null; };
+
+            const fSetor = val('setor');
+            const fTipo = val('filtro_tipo');
+            const fNome = valLower('filtro_nome');
+            const fMedico = valLower('filtro_medico');
+            const fCid = valLower('filtro_cid');
+            const fHosp = valLower('filtro_hospital');
+
+            const fNews = num('filtro_news');
+            const fPews = num('filtro_pews');
+            const fBraden = num('filtro_braden');
+            const fMorse = num('filtro_morse');
+            const fHumpty = num('filtro_humpty');
+
+            dadosFiltrados = dadosBrutos.filter(d => {
+                // Filtros Exatos
+                if (fSetor && d.local !== fSetor) return false;
+                if (fTipo && d.tipo_paciente !== fTipo) return false;
+
+                // Filtros Texto (Com proteção contra null)
+                if (fNome && !d.nome.toLowerCase().includes(fNome)) return false;
+                if (fMedico && !(d.medico || '').toLowerCase().includes(fMedico)) return false;
+                if (fCid && !(d.diagnostico || '').toLowerCase().includes(fCid)) return false;
+                if (fHosp && !(d.hospital || '').toLowerCase().includes(fHosp)) return false;
+
+                // Filtros Numéricos
+                if (fNews !== null && (!d.news || parseFloat(d.news) < fNews)) return false;
+                if (fPews !== null && (!d.pews || parseFloat(d.pews) < fPews)) return false;
+                if (fMorse !== null && (!d.morse || parseFloat(d.morse) < fMorse)) return false;
+                if (fHumpty !== null && (!d.humpty || parseFloat(d.humpty) < fHumpty)) return false;
+
+                // Braden (Menor é pior)
+                if (fBraden !== null) {
+                    let b = d.braden_adulto || d.braden_ped || d.braden;
+                    if (!b || parseFloat(b) > fBraden) return false;
+                }
+
+                return true;
+            });
+
+            atualizarDashboard();
+            renderizarTabela();
+        }
+
+        function atualizarDashboard() {
+            const total = dadosFiltrados.length;
+            const saidas = dadosFiltrados.filter(d => d.saida).length; // Conta quem tem data de saída
+            
+            // Tempo Médio (apenas para quem já saiu)
+            let somaHoras = 0;
+            let countTempo = 0;
+            dadosFiltrados.forEach(d => {
+                if(d.saida && d.entrada) {
+                    somaHoras += (new Date(d.saida) - new Date(d.entrada)) / (1000 * 60 * 60);
+                    countTempo++;
+                }
+            });
+            
+            let mediaStr = "-";
+            if(countTempo > 0) {
+                const mediaHoras = somaHoras / countTempo;
+                const dias = Math.floor(mediaHoras / 24);
+                const horas = Math.floor(mediaHoras % 24);
+                mediaStr = dias > 0 ? `${dias}d ${horas}h` : `${horas}h`;
+            }
+
+            const risco = dadosFiltrados.filter(d => 
+                (d.news >= 5) || (d.pews >= 5) || (d.meows) || (d.humpty >= 12)
+            ).length;
+
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-saidas').innerText = saidas;
+            document.getElementById('kpi-tempo').innerText = mediaStr;
+            document.getElementById('kpi-risco').innerText = risco;
+        }
+
+        function renderizarTabela() {
+            const tbody = document.getElementById('tbody-dados');
+            tbody.innerHTML = '';
+
+            if (dadosFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px;">Nenhum registro encontrado.</td></tr>';
+                return;
+            }
+
+            // Ordena: Quem saiu por último primeiro. Se não saiu, ordena por entrada.
+            dadosFiltrados.sort((a, b) => {
+                const dA = a.saida ? new Date(a.saida) : new Date(a.entrada);
+                const dB = b.saida ? new Date(b.saida) : new Date(b.entrada);
+                return dB - dA;
+            });
+
+            dadosFiltrados.forEach(d => {
+                const ent = new Date(d.entrada).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+                const sai = d.saida ? new Date(d.saida).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '-';
+                
+                // Cálculo de Permanência Individual
+                let permStr = "-";
+                if(d.entrada) {
+                    const d1 = new Date(d.entrada);
+                    const d2 = d.saida ? new Date(d.saida) : new Date(); // Se não saiu, usa agora
+                    const diff = d2 - d1;
+                    const h = Math.floor(diff / (1000 * 60 * 60));
+                    const dias = Math.floor(h / 24);
+                    const horasRest = h % 24;
+                    permStr = dias > 0 ? `${dias}d ${horasRest}h` : `${h}h`;
+                    if(!d.saida) permStr += " (atual)";
+                }
+
+                const statusHtml = d.saida 
+                    ? `<span class="badge bg-success">ALTA</span>`
+                    : `<span class="badge bg-warning">INTERNADO</span>`;
+
+                // Monta Escalas e Obs
+                let escalasArr = [];
+                if(d.news) escalasArr.push(`NEWS: <b>${d.news}</b>`);
+                if(d.pews) escalasArr.push(`PEWS: <b>${d.pews}</b>`);
+                if(d.braden_adulto) escalasArr.push(`Braden: <b>${d.braden_adulto}</b>`);
+                if(d.braden_ped) escalasArr.push(`Braden: <b>${d.braden_ped}</b>`);
+                
+                let obsHtml = "";
+                if(d.obs_clinica) obsHtml = `<div style="margin-top:4px; font-size:0.8em; color:#555; border-top:1px dashed #ccc; padding-top:2px;">OBS: ${d.obs_clinica}</div>`;
+                
+                const escalasStr = (escalasArr.length ? escalasArr.join(' | ') : '') + obsHtml;
+
+                const tr = `
+                    <tr>
+                        <td>
+                            <strong>${d.nome}</strong><br>
+                            <span style="font-size:0.8em; color:#555">Atend: ${d.atendimento || '-'}</span>
+                        </td>
+                        <td>
+                            ${d.local}<br>
+                            <small>Leito ${d.leito}</small>
+                        </td>
+                        <td style="font-size:0.9em">${ent}</td>
+                        <td style="font-size:0.9em">${sai}</td>
+                        <td style="font-weight:bold; color:#0056b3; font-size:0.9em">${permStr}</td>
+                        <td>
+                            <div style="font-size:0.85em; font-weight:bold;">${d.diagnostico || '-'}</div>
+                            <div style="font-size:0.8em; color:#444;">Méd: ${d.medico || '-'}</div>
+                            ${d.hospital ? `<div style="font-size:0.8em; color:#d63384;">Dest: ${d.hospital}</div>` : ''}
+                        </td>
+                        <td style="font-size:0.8em">${escalasStr || '-'}</td>
+                        <td>${statusHtml}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += tr;
+            });
+        }
+
+        function exportExcel() {
+            if(!dadosFiltrados.length) return alert("Sem dados para exportar.");
+            
+            // Prepara dados para Excel (remove HTML)
+            const dadosExcel = dadosFiltrados.map(d => ({
+                Nome: d.nome,
+                Atendimento: d.atendimento,
+                Setor: d.local,
+                Leito: d.leito,
+                Entrada: d.entrada,
+                Saida: d.saida || 'Internado',
+                Diagnostico: d.diagnostico,
+                Medico: d.medico,
+                Hospital_Destino: d.hospital,
+                Obs_Clinica: d.obs_clinica
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(dadosExcel);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
+            XLSX.writeFile(wb, "Relatorio_Leitos.xlsx");
+        }
+
+        function exportPDF() {
+            const el = document.getElementById('report-content');
+            // Oculta botões para o PDF
+            const btnDiv = el.querySelector('.no-print');
+            if(btnDiv) btnDiv.style.display = 'none';
+
+            const opt = {
+                margin: 5,
+                filename: 'Relatorio_Completo.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 1.5 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            html2pdf().set(opt).from(el).save().then(() => {
+                if(btnDiv) btnDiv.style.display = 'block'; // Restaura botões
+            });
+        }
+    </script>
+</body>
+</html>
