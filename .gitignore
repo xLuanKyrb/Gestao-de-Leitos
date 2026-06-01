@@ -1,0 +1,10 @@
+.vs/
+*/.vs/
+.vscode
+
+*.sqlite
+*.db
+*.log
+src/vslnx.sqlite
+src/vslnx.db
+src/vslnx.log

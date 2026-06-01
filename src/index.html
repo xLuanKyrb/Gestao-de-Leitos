@@ -333,45 +333,56 @@ if (p.observacao && p.observacao.trim() !== "" && p.observacao.trim() !== "[]") 
         const dadosObservacao = JSON.parse(p.observacao);
         
         if (Array.isArray(dadosObservacao) && dadosObservacao.length > 0) {
-            const item = dadosObservacao[0];
-            const textoExibir = item.texto || "-";
             
-            // Lógica do ícone baseado no status
-            let icone = "";
-            if (item.status === 'concluido') {
-                icone = '✅ ';
-            } else if (item.status === 'NA') {
-                icone = '❌ ';
-            }
+const listaHTML = dadosObservacao.map(item => {
+    const textoExibir = item.texto || "-";
+    
+    const statusLimpo = String(item.status || "").trim().toLowerCase();
+    
+    let icone = "⏳ ";
+    
+    if (statusLimpo === 'realizada') {
+        icone = '✅ ';
+    } else if (statusLimpo === 'naorealizada') {
+        icone = '❌ ';
+    } else if (statusLimpo === 'na') {
+        icone = '🚫 '; 
+    }
+
+    const motivoStr = (item.motivo && item.motivo.trim() !== "") ? ` <span style="opacity: 0.7; font-size: 0.9em;">(${item.motivo})</span>` : "";
+
+    return `<div>${icone}${textoExibir}${motivoStr}</div>`;
+}).join(''); // Junta tudo no final
 
             metasContent = `
-                <div style="background:rgba(0,0,0,0.15); padding:3px 5px; border-radius:3px; font-size:0.8em; line-height:1.1; margin-top: 3px;">
-                    ${icone}${textoExibir}
+                <div style="background:rgba(0,0,0,0.15); padding:3px 5px; border-radius:3px; font-size:0.8em; line-height:1.1; margin-top: 3px; display: flex; flex-direction: column; gap: 2px;">
+                    ${listaHTML}
                 </div>`;
+                
         } else {
             metasContent = `<div style="background:rgba(0,0,0,0.15); padding:3px 5px; border-radius:3px; font-size:0.8em; line-height:1.1; margin-top: 3px;">${p.observacao}</div>`;
         }
     } catch(e) {
         metasContent = `<div style="background:rgba(0,0,0,0.15); padding:3px 5px; border-radius:3px; font-size:0.8em; line-height:1.1; margin-top: 3px;">${p.observacao}</div>`;
     }
-}
+    }
 
 
   return `
   <div class="leito ${statusCor} ${destaqueClass}">
     <div class="leito-header">
-      <div style="display:flex; align-items:center;">
-          <div class="badge-leito">${iconeAlerta}L${p.leito}</div>
-          <div>
-              <div class="nome-paciente">${nomeExibir}</div>
-              <div class="dados-secundarios">
-                  <strong>${numAtendimento}</strong> | Nasc: <strong>${dataNascStr} (${idade})</strong>
-              </div>
-          </div>
-      </div>
-      <div style="font-size: 0.75em; text-align:right; line-height:1.1;">
-        <strong style="font-size:1.1em;">${formatarHora(p.entrada)}</strong>
-      </div>
+    <div style="display:flex; align-items:center;">
+        <div class="badge-leito">${iconeAlerta}L${p.leito}</div>
+    <div>
+        <div class="nome-paciente">${nomeExibir}</div>
+        <div class="dados-secundarios">
+            <strong>${numAtendimento}</strong> | Nasc: <strong>${dataNascStr} (${idade})</strong>
+        </div>
+        </div>
+    </div>
+    <div style="font-size: 0.75em; text-align:right; line-height:1.1;">
+    <strong style="font-size:1.1em;">${formatarHora(p.entrada)}</strong>
+    </div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 3px;">
